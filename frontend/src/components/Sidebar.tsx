@@ -55,12 +55,12 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       <aside className={`sidebar ${isOpen ? 'mobile-open' : ''}`}>
         <div className="sidebar-logo" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div className="sidebar-logo-icon">
-              <PlaySquare size={20} color="white" />
+            <div className="sidebar-logo-icon" style={{ background: 'white', padding: '2px', overflow: 'hidden' }}>
+              <img src="/logo.png" alt="Ari-ICU Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
             </div>
             <div className="sidebar-logo-text">
-              <h2>Teaching System</h2>
-              <span>Interactive Curriculum</span>
+              <h2 style={{ fontSize: '18px', letterSpacing: '-0.5px' }}>ARI-ICU</h2>
+              <span style={{ fontSize: '10px', opacity: 0.8 }}>ACADEMY SYSTEM</span>
             </div>
           </div>
 

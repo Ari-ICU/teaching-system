@@ -200,86 +200,118 @@ export default function AdminLessonsPage() {
         </div>
       </div>
 
-      <div className="grid-1" style={{ gap: '16px' }}>
-        {filteredLessons.length === 0 ? (
+      <div className="grid-1" style={{ gap: '32px' }}>
+        {modules.length === 0 && filteredLessons.length === 0 ? (
           <div className="glass-card" style={{ padding: '60px', textAlign: 'center', color: 'var(--text-muted)' }}>
             <PlayCircle size={48} style={{ margin: '0 auto 16px', opacity: 0.2 }} />
             <p>No lessons found. Start by creating a new one!</p>
           </div>
         ) : (
-          filteredLessons.map((lesson, index) => (
-            <div key={lesson.id} className="glass-card animate-fadeInUp" style={{ padding: '20px', display: 'flex', gap: '20px', alignItems: 'center', animationDelay: `${index * 0.05}s`, opacity: isReordering ? 0.7 : 1 }}>
+          modules
+            .filter(m => selectedModuleId === "all" || m.id.toString() === selectedModuleId)
+            .map((module) => {
+              const moduleLessons = filteredLessons.filter(l => l.module_id === module.id);
+              if (moduleLessons.length === 0 && searchTerm) return null;
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <button
-                  onClick={() => moveLesson(index, 'up')}
-                  disabled={
-                    isReordering || 
-                    index === 0 || 
-                    (selectedModuleId === "all" && filteredLessons[index].module_id !== filteredLessons[index - 1].module_id)
-                  }
-                  className="btn btn-ghost"
-                  style={{ 
-                    padding: '4px', 
-                    height: '28px', 
-                    minWidth: '28px', 
-                    opacity: (isReordering || index === 0 || (selectedModuleId === "all" && filteredLessons[index].module_id !== filteredLessons[index - 1].module_id)) ? 0.2 : 1 
-                  }}
-                >
-                  <ChevronUp size={18} />
-                </button>
-                <button
-                  onClick={() => moveLesson(index, 'down')}
-                  disabled={
-                    isReordering || 
-                    index === filteredLessons.length - 1 || 
-                    (selectedModuleId === "all" && filteredLessons[index].module_id !== filteredLessons[index + 1].module_id)
-                  }
-                  className="btn btn-ghost"
-                  style={{ 
-                    padding: '4px', 
-                    height: '28px', 
-                    minWidth: '28px', 
-                    opacity: (isReordering || index === filteredLessons.length - 1 || (selectedModuleId === "all" && filteredLessons[index].module_id !== filteredLessons[index + 1].module_id)) ? 0.2 : 1 
-                  }}
-                >
-                  <ChevronDown size={18} />
-                </button>
-              </div>
+              return (
+                <div key={module.id} className="glass-card" style={{ padding: '0', overflow: 'hidden', background: 'white', border: '1px solid var(--border)', boxShadow: '0 4px 20px -4px rgba(0,0,0,0.05)' }}>
+                  {/* Module Header Strip */}
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'space-between',
+                    padding: '16px 24px',
+                    background: `${module.color}08`,
+                    borderBottom: '1px solid var(--border)'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                      <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: `${module.color}`, color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 4px 12px ${module.color}40` }}>
+                        <Layers size={18} />
+                      </div>
+                      <div>
+                        <h2 style={{ fontSize: '16px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '2px' }}>{module.title}</h2>
+                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                          {moduleLessons.length} {moduleLessons.length === 1 ? 'Lesson' : 'Lessons'} available
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                       <span className="badge" style={{ background: 'white', border: '1px solid var(--border)', fontSize: '10px' }}>ID: {module.id}</span>
+                    </div>
+                  </div>
 
-              <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'var(--indigo-light)20', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <PlayCircle size={24} color="var(--indigo)" />
-              </div>
+                  {/* Lessons List */}
+                  <div style={{ padding: '8px 0' }}>
+                    {moduleLessons.length === 0 ? (
+                      <div style={{ padding: '40px', textAlign: 'center', fontSize: '14px', color: 'var(--text-muted)' }}>
+                        No lessons in this module yet.
+                      </div>
+                    ) : (
+                      moduleLessons.map((lesson, index) => (
+                        <div key={lesson.id} style={{ 
+                          padding: '14px 24px', 
+                          display: 'flex', 
+                          gap: '20px', 
+                          alignItems: 'center', 
+                          borderBottom: index === moduleLessons.length - 1 ? 'none' : '1px solid var(--bg-secondary)',
+                          transition: 'all 0.2s ease',
+                          opacity: isReordering ? 0.7 : 1
+                        }} className="lesson-row-hover">
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                            <button
+                              onClick={() => moveLesson(lessons.findIndex(l => l.id === lesson.id), 'up')}
+                              disabled={isReordering || index === 0}
+                              className="btn btn-ghost"
+                              style={{ padding: '2px', height: '20px', minWidth: '20px', opacity: (isReordering || index === 0) ? 0.1 : 0.5 }}
+                            >
+                              <ChevronUp size={14} />
+                            </button>
+                            <button
+                              onClick={() => moveLesson(lessons.findIndex(l => l.id === lesson.id), 'down')}
+                              disabled={isReordering || index === moduleLessons.length - 1}
+                              className="btn btn-ghost"
+                              style={{ padding: '2px', height: '20px', minWidth: '20px', opacity: (isReordering || index === moduleLessons.length - 1) ? 0.1 : 0.5 }}
+                            >
+                              <ChevronDown size={14} />
+                            </button>
+                          </div>
 
-              <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <h3 style={{ fontSize: '18px', fontWeight: 700 }}>{lesson.title}</h3>
-                  {lesson.is_active === false && <span className="badge badge-rose">DRAFT</span>}
+                          <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'var(--bg-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <PlayCircle size={16} color="var(--text-muted)" />
+                          </div>
+
+                          <div style={{ flex: 1 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <h3 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)' }}>{lesson.title}</h3>
+                              {lesson.is_active === false && <span className="badge badge-rose" style={{ fontSize: '9px', padding: '1px 5px' }}>DRAFT</span>}
+                            </div>
+                            <div style={{ display: 'flex', gap: '16px', marginTop: '2px', fontSize: '12px', color: 'var(--text-muted)' }}>
+                              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><BookOpen size={12} /> {lesson.slides_count || 0} Slides</span>
+                              {lesson.teacher && <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>By {lesson.teacher.name}</span>}
+                            </div>
+                          </div>
+
+                          <div style={{ display: 'flex', gap: '4px' }}>
+                            <Link href={`/admin/lessons/${lesson.id}/slides`} className="btn btn-ghost" style={{ padding: '6px', color: 'var(--indigo)' }} title="Manage Slides">
+                              <PlayCircle size={18} />
+                            </Link>
+                           <button onClick={() => handleDuplicate(lesson.id)} className="btn btn-ghost" style={{ padding: '6px', color: 'var(--emerald)' }} title="Duplicate">
+                              <Copy size={18} />
+                           </button>
+                           <Link href={`/admin/lessons/${lesson.id}/edit`} className="btn btn-ghost" style={{ padding: '6px', color: 'var(--indigo)' }}>
+                              <Edit2 size={18} />
+                           </Link>
+                           <button onClick={() => setDeleteModal({ isOpen: true, id: lesson.id })} className="btn btn-ghost" style={{ padding: '6px', color: 'var(--rose)' }}>
+                              <Trash2 size={18} />
+                           </button>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
                 </div>
-                <div style={{ display: 'flex', gap: '16px', marginTop: '6px', fontSize: '13px', color: 'var(--text-muted)' }}>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Layers size={14} /> {lesson.module?.title || "No Module"}</span>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><BookOpen size={14} /> {lesson.slides_count || 0} Slides</span>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Clock size={14} /> Position {index + 1}</span>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--indigo)' }}>Author: {lesson.teacher?.name || "System"}</span>
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <Link href={`/admin/lessons/${lesson.id}/slides`} className="btn btn-ghost" style={{ padding: '8px', border: '1px solid var(--indigo-light)50', background: 'var(--indigo-light)10' }} title="Manage Slides">
-                  <PlayCircle size={18} color="var(--indigo)" />
-                </Link>
-               <button onClick={() => handleDuplicate(lesson.id)} className="btn btn-ghost" style={{ padding: '8px' }} title="Duplicate Lesson">
-                  <Copy size={18} color="var(--emerald)" />
-               </button>
-               <Link href={`/admin/lessons/${lesson.id}/edit`} className="btn btn-ghost" style={{ padding: '8px' }}>
-                  <Edit2 size={18} color="var(--indigo)" />
-               </Link>
-               <button onClick={() => setDeleteModal({ isOpen: true, id: lesson.id })} className="btn btn-ghost" style={{ padding: '8px' }}>
-                  <Trash2 size={18} color="var(--rose)" />
-               </button>
-              </div>
-            </div>
-          ))
+              );
+            })
         )}
       </div>
     </div>

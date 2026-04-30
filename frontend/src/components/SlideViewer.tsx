@@ -120,21 +120,15 @@ export default function SlideViewer({ slides }: { slides: any[] }) {
               </div>
             )}
             <div style={{ flex: 1, maxWidth: (currentSlide.image_position === 'top' || currentSlide.image_position === 'bottom') ? '900px' : 'none', margin: (currentSlide.image_position === 'top' || currentSlide.image_position === 'bottom') ? '0 auto' : '0' }}>
-              <ReactMarkdown 
-                remarkPlugins={[remarkGfm]}
-                components={{
-                  h1: ({children}) => <h1 style={{ background: 'linear-gradient(135deg, var(--text-primary), var(--indigo))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{children}</h1>,
-                  code({node, inline, className, children, ...props}: any) {
-                    return (
-                      <code className={className} {...props}>
-                        {children}
-                      </code>
-                    )
-                  }
+              <div 
+                className="prose-content"
+                dangerouslySetInnerHTML={{ __html: currentSlide.content }} 
+                style={{ 
+                  fontSize: isFullscreen ? '22px' : '18px', 
+                  lineHeight: '1.8',
+                  color: 'var(--text-secondary)'
                 }}
-              >
-                {currentSlide.content}
-              </ReactMarkdown>
+              />
             </div>
           </div>
 
