@@ -1,0 +1,83 @@
+
+
+services:
+  # ─────────────── Nginx Reverse Proxy ───────────────
+  nginx:
+    image: nginx:alpine
+    container_name: teaching_nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./backend:/var/www/backend
+    depends_on:
+      - laravel
+      - nextjs
+    networks:
+      - teaching_net
+
+  # ─────────────── Laravel Backend ───────────────
+  laravel:
+    build:
+      context: .
+      dockerfile: ./docker/php/Dockerfile
+    container_name: teaching_laravel
+    working_dir: /var/www/backend
+    volumes:
+      - ./backend:/var/www/backend
+      - ./docker/php/php.ini:/usr/local/etc/php/conf.d/custom.ini
+    env_file:
+      - ./backend/.env
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - teaching_net
+
+  # ─────────────── Next.js Frontend ───────────────
+  nextjs:
+    build:
+      context: .
+      dockerfile: ./docker/node/Dockerfile
+    container_name: teaching_nextjs
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://localhost:8080/api
+      - NEXT_PUBLIC_STORAGE_URL=http://localhost:8080/storage
+      - INTERNAL_API_URL=http://nginx/api
+    ports:
+      - "3001:3000"
+    networks:
+      - teaching_net
+
+  # ─────────────── PostgreSQL Database ───────────────
+  db:
+    image: postgres:16-alpine
+    container_name: teaching_db
+    environment:
+      POSTGRES_DB: teaching_db
+      POSTGRES_USER: teaching_user
+      POSTGRES_PASSWORD: secret
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U teaching_user -d teaching_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - teaching_net
+
+networks:
+  teaching_net:
+    driver: bridge
+
+volumes:
+  postgres_data:
