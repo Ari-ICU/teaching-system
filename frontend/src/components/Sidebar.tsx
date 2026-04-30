@@ -29,12 +29,12 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     return (
       <aside className={`sidebar ${isOpen ? 'mobile-open' : ''}`}>
         <div className="sidebar-logo">
-          <div className="sidebar-logo-icon">
-            <PlaySquare size={20} color="white" />
+          <div className="sidebar-logo-icon" style={{ background: 'white', padding: '2px', overflow: 'hidden' }}>
+            <img src="/logo.png" alt="Ari-ICU Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
           </div>
           <div className="sidebar-logo-text">
-            <h2>Teaching System</h2>
-            <span>Interactive Curriculum</span>
+            <h2 style={{ fontSize: '18px', letterSpacing: '-0.5px' }}>ARI-ICU</h2>
+            <span>ACADEMY SYSTEM</span>
           </div>
         </div>
       </aside>
@@ -63,9 +63,9 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               <span>Interactive Curriculum</span>
             </div>
           </div>
-          
+
           {/* Mobile close button inside sidebar */}
-          <button 
+          <button
             onClick={onClose}
             className="mobile-close-btn"
             style={{ display: 'none', background: 'none', border: 'none', color: '#86b99a', cursor: 'pointer' }}
@@ -161,5 +161,5 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         }
       `}</style>
     </>
-  );  
+  );
 }
