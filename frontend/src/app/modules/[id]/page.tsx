@@ -2,6 +2,7 @@
 
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowLeft, Clock, BarChart, PlayCircle, AlertCircle } from "lucide-react";
 import ModuleIcon from "@/components/ModuleIcon";
 import CourseRoadmap from "@/components/CourseRoadmap";
@@ -9,6 +10,7 @@ import { useAuth } from "@/context/AuthContext";
 
 export default function ModulePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  const router = useRouter();
   const [moduleData, setModuleData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -21,10 +23,14 @@ export default function ModulePage({ params }: { params: Promise<{ id: string }>
   }, []);
 
   useEffect(() => {
-    if (mounted) {
+    if (mounted && !authLoading) {
+      if (!token) {
+        router.push('/login');
+        return;
+      }
       fetchModule();
     }
-  }, [id, token, mounted]);
+  }, [id, token, authLoading, mounted]);
 
   const fetchModule = async () => {
     try {

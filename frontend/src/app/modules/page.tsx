@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowLeft, BookOpen, Search, Layout, ChevronRight, GraduationCap } from "lucide-react";
 import ModuleIcon from "@/components/ModuleIcon";
 import { useAuth } from "@/context/AuthContext";
@@ -11,6 +12,7 @@ export default function ModulesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [expandedCourses, setExpandedCourses] = useState<Record<number, boolean>>({});
+  const router = useRouter();
   const { token, user, isLoading: authLoading, logout } = useAuth();
 
   const [mounted, setMounted] = useState(false);
@@ -28,7 +30,7 @@ export default function ModulesPage() {
         // This gives proper course-grouped modules view
         fetchTeacherCourses();
       } else {
-        fetchPublicModules();
+        router.push('/login');
       }
     }
   }, [token, mounted, authLoading, user]);

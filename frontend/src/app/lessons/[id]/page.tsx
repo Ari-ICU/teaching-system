@@ -2,6 +2,7 @@
 
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowLeft, Presentation, Code2, LayoutList, AlertCircle } from "lucide-react";
 import SlideViewer from "@/components/SlideViewer";
 import CodeEditor from "@/components/CodeEditor";
@@ -11,6 +12,7 @@ import { useAuth } from "@/context/AuthContext";
 export default function LessonPage({ params, searchParams }: { params: Promise<{ id: string }>, searchParams: Promise<{ tab?: string }> }) {
   const { id } = use(params);
   const { tab } = use(searchParams);
+  const router = useRouter();
   const { token, isLoading: authLoading } = useAuth();
   const [data, setData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -22,10 +24,14 @@ export default function LessonPage({ params, searchParams }: { params: Promise<{
   }, []);
 
   useEffect(() => {
-    if (mounted) {
+    if (mounted && !authLoading) {
+      if (!token) {
+        router.push('/login');
+        return;
+      }
       fetchLessonData();
     }
-  }, [id, token, mounted]);
+  }, [id, token, authLoading, mounted]);
 
   const fetchLessonData = async () => {
     try {
