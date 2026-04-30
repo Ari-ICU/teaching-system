@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, PlaySquare, Layout, Home, LogOut, User, X } from "lucide-react";
+import { BookOpen, PlaySquare, Layout, Home, LogOut, User, X, FileJson } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
 interface SidebarProps {
@@ -89,9 +89,13 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           {(user?.role === 'admin' || user?.role === 'teacher') && (
             <>
               <div className="sidebar-section-label" style={{ marginTop: "20px" }}>Admin</div>
-              <Link href="/admin" className={`sidebar-item ${pathname.startsWith("/admin") ? "active" : ""}`}>
+              <Link href="/admin" className={`sidebar-item ${pathname === "/admin" ? "active" : ""}`}>
                 <span className="sidebar-item-icon"><Layout size={18} /></span>
                 Content Manager
+              </Link>
+              <Link href="/admin/import" className={`sidebar-item ${pathname === "/admin/import" ? "active" : ""}`}>
+                <span className="sidebar-item-icon"><FileJson size={18} /></span>
+                Import Content
               </Link>
             </>
           )}

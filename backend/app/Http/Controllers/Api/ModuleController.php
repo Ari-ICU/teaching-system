@@ -248,4 +248,84 @@ class ModuleController extends Controller
             'data'    => $newModule->load('courses'),
         ]);
     }
+
+    public function import(\Illuminate\Http\Request $request): JsonResponse
+    {
+        $request->validate([
+            'json_data' => 'required|json',
+        ]);
+
+        $data = json_decode($request->json_data, true);
+
+        if (!isset($data['title'])) {
+            return response()->json(['success' => false, 'message' => 'Invalid JSON: title is required'], 422);
+        }
+
+        \Illuminate\Support\Facades\DB::beginTransaction();
+        try {
+            // 1. Create Module
+            $moduleData = [
+                'title'       => $data['title'],
+                'description' => $data['description'] ?? '',
+                'icon'        => $data['icon'] ?? 'layout',
+                'color'       => $data['color'] ?? '#6366f1',
+                'order'       => $data['order'] ?? (Module::max('order') + 1),
+                'is_active'   => $data['is_active'] ?? true,
+                'teacher_id'  => $request->user()->id,
+            ];
+
+            $module = Module::create($moduleData);
+
+            if (isset($data['course_ids'])) {
+                $module->courses()->sync($data['course_ids']);
+            }
+
+            // 2. Create Lessons
+            if (isset($data['lessons']) && is_array($data['lessons'])) {
+                foreach ($data['lessons'] as $lIndex => $lData) {
+                    $lesson = $module->lessons()->create([
+                        'title'       => $lData['title'],
+                        'description' => $lData['description'] ?? '',
+                        'content'     => $lData['content'] ?? '',
+                        'order'       => $lData['order'] ?? $lIndex,
+                        'duration'    => $lData['duration'] ?? '45 min',
+                        'difficulty'  => $lData['difficulty'] ?? 'beginner',
+                        'is_active'   => $lData['is_active'] ?? true,
+                    ]);
+
+                    // 3. Create Slides
+                    if (isset($lData['slides']) && is_array($lData['slides'])) {
+                        foreach ($lData['slides'] as $sIndex => $sData) {
+                            $lesson->slides()->create([
+                                'title'          => $sData['title'],
+                                'type'           => $sData['type'] ?? 'concept',
+                                'content'        => $sData['content'] ?? '',
+                                'code_snippet'   => $sData['code_snippet'] ?? '',
+                                'code_theme'     => $sData['code_theme'] ?? 'terminal',
+                                'code_position'  => $sData['code_position'] ?? 'right',
+                                'image_position' => $sData['image_position'] ?? 'top',
+                                'image_width'    => $sData['image_width'] ?? '100',
+                                'order'          => $sData['order'] ?? $sIndex,
+                            ]);
+                        }
+                    }
+                }
+            }
+
+            \Illuminate\Support\Facades\DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Curriculum imported successfully',
+                'data'    => $module->load('lessons.slides')
+            ], 201);
+
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Import failed: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

@@ -52,6 +52,7 @@ Route::middleware(['auth:api', 'role:admin,teacher'])->group(function () {
     Route::post('/modules/reorder', [ModuleController::class, 'reorder']);
     Route::get('admin/modules', [ModuleController::class, 'adminIndex']);
     Route::post('/modules/{module}/duplicate', [ModuleController::class, 'duplicate']);
+    Route::post('/modules/import', [ModuleController::class, 'import']);
     Route::apiResource('modules', ModuleController::class)->except(['index', 'show']);
     
     // Lessons reorder
