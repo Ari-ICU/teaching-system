@@ -249,10 +249,20 @@ export default function EditSlidePage({ params }: { params: Promise<{ id: string
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                 <label style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-muted)' }}>TEACHING MATERIAL (HTML/MARKDOWN)</label>
-                <div style={{ display: 'flex', gap: '6px' }}>
-                  {['<h2>', '<p>', '<ul><li>', '<strong>', '<code>'].map(tag => (
-                    <button key={tag} type="button" onClick={() => setFormData({ ...formData, content: formData.content + tag })}
-                      style={{ padding: '4px 8px', fontSize: '11px', fontFamily: 'monospace', background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: '6px', cursor: 'pointer', color: 'var(--indigo)' }}>{tag}</button>
+                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                  {[
+                    { label: 'H2', tag: '<h2>Title</h2>' },
+                    { label: 'P', tag: '<p>Paragraph</p>' },
+                    { label: 'Bold', tag: '<strong>Text</strong>' },
+                    { label: 'Code', tag: '<code>code</code>' },
+                    { label: 'Red', tag: '<span style="color:#ef4444">Text</span>' },
+                    { label: 'Blue', tag: '<span style="color:#3b82f6">Text</span>' },
+                    { label: 'Green', tag: '<span style="color:#10b981">Text</span>' },
+                    { label: 'Highlight', tag: '<mark style="background:#fef08a;padding:0 4px;border-radius:4px">Text</mark>' },
+                    { label: 'List', tag: '<ul>\n  <li>Item 1</li>\n  <li>Item 2</li>\n</ul>' }
+                  ].map(item => (
+                    <button key={item.label} type="button" onClick={() => setFormData({ ...formData, content: formData.content + item.tag })}
+                      style={{ padding: '4px 10px', fontSize: '11px', fontWeight: 600, background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: '6px', cursor: 'pointer', color: 'var(--indigo)' }}>{item.label}</button>
                   ))}
                 </div>
               </div>
