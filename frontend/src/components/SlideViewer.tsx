@@ -117,14 +117,11 @@ export default function SlideViewer({ slides }: { slides: Slide[] }) {
             )}
 
             <div
-              className="content-flex-wrapper"
-              style={{
-                flexDirection: 'row' // Default horizontal flow for Left/Right slots
-              }}
+              className="content-layout-wrapper"
             >
               {/* LEFT SLOT IMAGES */}
               {(currentSlide.image_position === 'left' || currentSlide.secondary_image_position === 'left') && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', flex: '1.1' }}>
+                <div className="side-images-wrapper" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                   {currentSlide.image_position === 'left' && currentSlide.image && (
                     <div className="slide-image-wrapper animate-slideIn" style={{ width: `${currentSlide.image_width || 100}%`, transform: 'rotate(-1deg)' }}>
                       <img src={`${storageUrl}/${currentSlide.image}`} alt="" className="slide-img" />
@@ -146,18 +143,18 @@ export default function SlideViewer({ slides }: { slides: Slide[] }) {
                     __html: useMemo(() => {
                       // Ensure we have a string
                       const content = currentSlide.content || '';
-                      
+
                       // Parse markdown with modern options
                       // breaks: true allows single newlines to be rendered as <br>
                       // gfm: true enables GitHub Flavored Markdown (tables, tasklists, etc.)
-                      let html = marked.parse(content, { 
-                        breaks: true, 
-                        gfm: true 
+                      let html = marked.parse(content, {
+                        breaks: true,
+                        gfm: true
                       }) as string;
 
                       // Fix common copy-paste issues where bold tags might be broken across words
                       html = html.replace(/<strong>(\w)<\/strong>(\w+)/gi, '<strong>$1$2</strong>');
-                      
+
                       // Filter out the title from the content if it's identical to the header title
                       // to avoid redundancy on the slide
                       const titlePattern = new RegExp(`^<h[12][^>]*>${currentSlide.title}<\/h[12]>`, 'i');
@@ -169,7 +166,7 @@ export default function SlideViewer({ slides }: { slides: Slide[] }) {
 
               {/* RIGHT SLOT IMAGES */}
               {(currentSlide.image_position === 'right' || currentSlide.secondary_image_position === 'right') && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', flex: '1.1' }}>
+                <div className="side-images-wrapper" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                   {currentSlide.image_position === 'right' && currentSlide.image && (
                     <div className="slide-image-wrapper animate-slideIn" style={{ width: `${currentSlide.image_width || 100}%`, transform: 'rotate(-1deg)' }}>
                       <img src={`${storageUrl}/${currentSlide.image}`} alt="" className="slide-img" />
@@ -381,26 +378,27 @@ export default function SlideViewer({ slides }: { slides: Slide[] }) {
           padding: 80px 160px;
         }
 
-        .slide-layout-engine[data-layout="centered"] .content-flex-wrapper {
+        .slide-layout-engine[data-layout="centered"] .content-layout-wrapper {
+          display: flex !important;
           flex-direction: column !important;
           align-items: center;
           text-align: center;
         }
 
         /* Split Screen Layout */
-        .slide-layout-engine[data-layout="split"] .content-flex-wrapper {
-          gap: 0;
+        .slide-layout-engine[data-layout="split"] .content-layout-wrapper {
+          grid-template-columns: 1fr 1fr !important;
+          gap: 40px;
           width: 100%;
         }
 
         .slide-layout-engine[data-layout="split"] .text-content-wrapper,
-        .slide-layout-engine[data-layout="split"] .images-grid {
-          flex: 1 1 50% !important;
-          padding: 0 40px;
+        .slide-layout-engine[data-layout="split"] .side-images-wrapper {
+          padding: 0;
         }
 
         /* Full Code Layout */
-        .slide-layout-engine[data-layout="full-code"] .images-grid {
+        .slide-layout-engine[data-layout="full-code"] .side-images-wrapper {
           display: none !important;
         }
 
@@ -434,14 +432,20 @@ export default function SlideViewer({ slides }: { slides: Slide[] }) {
           width: 100%;
         }
 
-        .content-flex-wrapper {
-          display: flex;
-          gap: 32px;
+        .content-layout-wrapper {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 40px;
           align-items: center;
+          width: 100%;
         }
 
-        .images-grid {
-          width: 100%;
+        .text-content-wrapper {
+          min-width: 0; /* Prevents grid blowout */
+        }
+
+        .side-images-wrapper {
+          min-width: 0; /* Prevents grid blowout */
         }
 
         .slide-image-wrapper {
@@ -466,16 +470,16 @@ export default function SlideViewer({ slides }: { slides: Slide[] }) {
           object-fit: contain;
         }
 
-        .text-content-wrapper {
-          flex: 1;
-          min-width: 350px;
-        }
-
         .prose-content {
           font-size: 20px;
           line-height: 1.8;
           color: #1e293b;
           font-weight: 450;
+          text-align: left;
+        }
+
+        .prose-content :global(p) {
+          margin-bottom: 1em;
         }
 
         .prose-content :global(h1), .prose-content :global(h2) {
@@ -487,57 +491,33 @@ export default function SlideViewer({ slides }: { slides: Slide[] }) {
         }
 
         .prose-content :global(strong) {
-          color: var(--slide-accent);
-          font-weight: 800;
-          background: rgba(99, 102, 241, 0.08);
-          padding: 2px 8px;
-          border-radius: 8px;
-          display: inline-block;
-          line-height: 1.2;
-          vertical-align: middle;
-          margin: 0 2px;
-          transition: all 0.2s ease;
-          border-bottom: 2px solid rgba(99, 102, 241, 0.2);
-        }
-
-        .slide-layout-engine[data-layout="centered"] .prose-content :global(strong) {
-          display: inline-block;
-          margin-bottom: 4px;
+          font-weight: 700;
+          color: inherit;
         }
 
         .prose-content :global(ul) {
-          list-style: none;
-          padding: 0;
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-          margin: 24px 0;
-          width: 100%;
+          padding-left: 24px;
+          margin: 16px 0;
+          display: block;
+          list-style-type: disc;
+        }
+
+        .prose-content :global(ol) {
+          padding-left: 24px;
+          margin: 16px 0;
+          display: block;
+          list-style-type: decimal;
         }
 
         .prose-content :global(li) {
-          position: relative;
-          padding-left: 32px;
+          margin-bottom: 8px;
           color: inherit;
           text-align: left;
         }
 
-        .slide-layout-engine[data-layout="centered"] .prose-content :global(li) {
-          padding-left: 32px;
-          display: inline-block;
-          max-width: 600px;
-          margin: 0 auto;
-        }
-
-        .prose-content :global(li::before) {
-          content: "→";
-          position: absolute;
-          left: 0;
-          top: 0;
-          font-weight: 900;
-          color: var(--slide-accent);
-          opacity: 0.8;
-        }
+        .prose-content :global(.ql-align-center) { text-align: center; }
+        .prose-content :global(.ql-align-right) { text-align: right; }
+        .prose-content :global(.ql-align-justify) { text-align: justify; }
 
         .is-fullscreen .prose-content {
           font-size: 26px;

@@ -228,6 +228,7 @@ export default function NewSlidePage({ params }: { params: Promise<{ id: string 
                         [{ 'header': [2, 3, false] }],
                         ['bold', 'italic', 'underline', 'strike'],
                         [{'list': 'ordered'}, {'list': 'bullet'}],
+                        [{ 'align': [] }],
                         ['blockquote', 'code-block'],
                         ['link', 'clean']
                       ],
@@ -580,6 +581,7 @@ export default function NewSlidePage({ params }: { params: Promise<{ id: string 
           min-height: 300px;
           padding: 24px;
           line-height: 1.8;
+          text-align: left;
         }
 
         .rich-editor-wrapper :global(.ql-editor.ql-blank::before) {
