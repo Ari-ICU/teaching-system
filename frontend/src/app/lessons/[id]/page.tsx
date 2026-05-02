@@ -109,29 +109,112 @@ export default function LessonPage({ params, searchParams }: { params: Promise<{
         </div>
       </div>
 
-      <header className="page-header glass-card" style={{ padding: '32px' }}>
-        <h1 className="page-title">{lesson.title}</h1>
-        <p className="page-subtitle">{lesson.description}</p>
+      <header className="lesson-studio-header">
+        <div className="header-info">
+          <span className="lesson-badge">LESSON MODULE</span>
+          <h1 className="lesson-main-title">{lesson.title}</h1>
+          <p className="lesson-desc">{lesson.description}</p>
+        </div>
         
-        {/* Lesson Tabs */}
-        <div style={{ display: 'flex', gap: '12px', marginTop: '32px' }}>
-          <Link href={`/lessons/${lesson.id}?tab=slides`} className={`btn ${currentTab === 'slides' ? 'btn-primary' : 'btn-ghost'}`}>
-            <Presentation size={16} /> Slides ({slides.length})
+        <nav className="lesson-tabs">
+          <Link href={`/lessons/${lesson.id}?tab=slides`} className={`tab-item ${currentTab === 'slides' ? 'active' : ''}`}>
+            <Presentation size={18} /> <span>Presentation</span> <small>{slides.length}</small>
           </Link>
           
           {codeExamples.length > 0 && (
-            <Link href={`/lessons/${lesson.id}?tab=code`} className={`btn ${currentTab === 'code' ? 'btn-primary' : 'btn-ghost'}`}>
-              <Code2 size={16} /> Code Demos ({codeExamples.length})
+            <Link href={`/lessons/${lesson.id}?tab=code`} className={`tab-item ${currentTab === 'code' ? 'active' : ''}`}>
+              <Code2 size={18} /> <span>Code Demos</span> <small>{codeExamples.length}</small>
             </Link>
           )}
 
           {exercises.length > 0 && (
-            <Link href={`/lessons/${lesson.id}?tab=exercises`} className={`btn ${currentTab === 'exercises' ? 'btn-primary' : 'btn-ghost'}`}>
-              <LayoutList size={16} /> Exercises ({exercises.length})
+            <Link href={`/lessons/${lesson.id}?tab=exercises`} className={`tab-item ${currentTab === 'exercises' ? 'active' : ''}`}>
+              <LayoutList size={18} /> <span>Challenges</span> <small>{exercises.length}</small>
             </Link>
           )}
-        </div>
+        </nav>
       </header>
+
+      <style jsx>{`
+        .lesson-studio-header {
+          margin-bottom: 40px;
+          display: flex;
+          flex-direction: column;
+          gap: 32px;
+        }
+
+        .lesson-badge {
+          display: inline-block;
+          font-size: 10px;
+          font-weight: 800;
+          color: var(--indigo);
+          letter-spacing: 0.15em;
+          margin-bottom: 12px;
+        }
+
+        .lesson-main-title {
+          font-size: 42px;
+          font-weight: 800;
+          color: #0f172a;
+          letter-spacing: -0.03em;
+          margin-bottom: 12px;
+          line-height: 1.1;
+        }
+
+        .lesson-desc {
+          font-size: 16px;
+          color: #64748b;
+          max-width: 800px;
+          line-height: 1.6;
+        }
+
+        .lesson-tabs {
+          display: flex;
+          gap: 8px;
+          background: #f1f5f9;
+          padding: 6px;
+          border-radius: 16px;
+          width: fit-content;
+        }
+
+        .tab-item {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 10px 20px;
+          border-radius: 12px;
+          color: #64748b;
+          font-weight: 700;
+          font-size: 14px;
+          text-decoration: none;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .tab-item:hover {
+          color: #0f172a;
+          background: rgba(255,255,255,0.5);
+        }
+
+        .tab-item.active {
+          background: white;
+          color: var(--indigo);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        .tab-item small {
+          font-size: 10px;
+          background: #e2e8f0;
+          color: #94a3b8;
+          padding: 2px 6px;
+          border-radius: 6px;
+          font-weight: 800;
+        }
+
+        .tab-item.active small {
+          background: rgba(99,102,241,0.1);
+          color: var(--indigo);
+        }
+      `}</style>
 
       <div style={{ marginTop: '24px' }}>
         {/* Slides Tab */}

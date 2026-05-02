@@ -34,8 +34,17 @@ export interface Slide {
   lesson_id: number;
   title: string;
   content: string;
-  type: 'slide' | 'code' | 'demo' | 'exercise';
-  language?: string;
+  type: string;
+  layout_type?: string;
+  image?: string;
+  secondary_image?: string;
+  image_position?: "top" | "bottom" | "left" | "right";
+  image_width?: string;
+  secondary_image_position?: "top" | "bottom" | "left" | "right";
+  secondary_image_width?: string;
+  code_snippet?: string;
+  code_position?: "bottom" | "right";
+  code_theme?: "terminal" | "browser" | "editor";
   order: number;
 }
 

@@ -235,7 +235,21 @@ export default function AdminLessonsPage() {
                         </div>
                       </div>
                     </div>
-                    <div style={{ display: 'flex', gap: '8px' }}>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                       <Link 
+                         href={`/admin/lessons/new?module_id=${module.id}`}
+                         className="btn btn-ghost" 
+                         style={{ 
+                           padding: '6px 12px', 
+                           fontSize: '12px', 
+                           background: 'white', 
+                           border: '1px solid var(--border)',
+                           color: 'var(--indigo)',
+                           fontWeight: 700
+                         }}
+                       >
+                         <Plus size={14} /> Add Lesson
+                       </Link>
                        <span className="badge" style={{ background: 'white', border: '1px solid var(--border)', fontSize: '10px' }}>ID: {module.id}</span>
                     </div>
                   </div>

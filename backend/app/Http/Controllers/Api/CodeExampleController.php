@@ -75,4 +75,18 @@ class CodeExampleController extends Controller
             'message' => 'Code example deleted successfully'
         ]);
     }
+
+    public function duplicate(CodeExample $codeExample): JsonResponse
+    {
+        $newExample = $codeExample->replicate();
+        $newExample->title = $newExample->title . ' (Copy)';
+        $newExample->order = $codeExample->order + 1;
+        $newExample->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Code example duplicated successfully',
+            'data'    => $newExample,
+        ]);
+    }
 }

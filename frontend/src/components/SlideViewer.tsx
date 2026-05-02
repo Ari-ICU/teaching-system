@@ -1,11 +1,27 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import { ChevronLeft, ChevronRight, Maximize2, Minimize2 } from "lucide-react";
+import { useState, useEffect, useRef, useMemo } from "react";
+import { ChevronLeft, ChevronRight, Maximize2, Minimize2, Terminal, Globe, Code2, ImageIcon, Info } from "lucide-react";
+import { marked } from "marked";
 
-export default function SlideViewer({ slides }: { slides: any[] }) {
+interface Slide {
+  id: number;
+  title: string;
+  content: string;
+  type: string;
+  layout_type?: string;
+  image?: string;
+  secondary_image?: string;
+  image_position?: "top" | "bottom" | "left" | "right";
+  image_width?: string;
+  secondary_image_position?: "top" | "bottom" | "left" | "right";
+  secondary_image_width?: string;
+  code_snippet?: string;
+  code_position?: "bottom" | "right";
+  code_theme?: "terminal" | "browser" | "editor";
+}
+
+export default function SlideViewer({ slides }: { slides: Slide[] }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const viewerRef = useRef<HTMLDivElement>(null);
@@ -26,214 +42,674 @@ export default function SlideViewer({ slides }: { slides: any[] }) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [slides.length]);
 
-  // Sync fullscreen state with document state
   useEffect(() => {
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
     };
-
     document.addEventListener("fullscreenchange", handleFullscreenChange);
     return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
   }, []);
 
   const toggleFullscreen = () => {
     if (!viewerRef.current) return;
-
     if (!document.fullscreenElement) {
-      viewerRef.current.requestFullscreen().catch((err) => {
-        console.error(`Error attempting to enable fullscreen: ${err.message}`);
-      });
+      viewerRef.current.requestFullscreen().catch(err => console.error(err));
     } else {
       document.exitFullscreen();
     }
   };
 
-  if (!slides || slides.length === 0) return <div>No slides available.</div>;
+  if (!slides || slides.length === 0) return (
+    <div className="glass-card" style={{ padding: '40px', textAlign: 'center' }}>
+      <Info size={48} style={{ margin: '0 auto 16px', opacity: 0.2 }} />
+      <p>No slides available for this lesson.</p>
+    </div>
+  );
 
   const currentSlide = slides[currentIndex];
+  const storageUrl = process.env.NEXT_PUBLIC_STORAGE_URL || 'http://localhost:8080/storage';
 
   return (
-    <div className={`slide-viewer ${isFullscreen ? 'is-fullscreen' : ''}`} ref={viewerRef}>
-      <div className="slide-header">
-        <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <span className={`badge badge-${currentSlide.type === 'code' ? 'indigo' : 'emerald'}`} style={{ padding: '4px 12px', fontSize: '10px' }}>
-              {currentSlide.type.toUpperCase()}
-            </span>
-            <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', background: 'var(--bg-secondary)', padding: '2px 8px', borderRadius: '4px' }}>
-              Slide {currentIndex + 1} of {slides.length}
-            </span>
+    <div className={`slide-viewer-container ${isFullscreen ? 'is-fullscreen' : ''}`} ref={viewerRef}>
+      {/* Premium Header */}
+      <div className="slide-viewer-header">
+        <div className="slide-info">
+          <div className="slide-type-badge">
+            {currentSlide.type === 'practice' ? <Code2 size={12} /> : <Info size={12} />}
+            <span>{currentSlide.type.toUpperCase()}</span>
           </div>
-          <div style={{ width: '1px', height: '20px', background: 'var(--border)' }} />
-          <h3 style={{ fontSize: "15px", fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>{currentSlide.title}</h3>
+          <div className="slide-counter">
+            Slide {currentIndex + 1} <span>/ {slides.length}</span>
+          </div>
+          <div className="header-divider" />
+          <h2 className="slide-title">{currentSlide.title}</h2>
         </div>
-        <button 
-          className="btn btn-ghost" 
-          style={{ width: '40px', height: '40px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '12px' }}
-          title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
-          onClick={toggleFullscreen}
-        >
-          {isFullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
+
+        <button className="fullscreen-toggle" onClick={toggleFullscreen} title="Toggle Fullscreen">
+          {isFullscreen ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
         </button>
       </div>
 
-      <div 
-        className="slide-content animate-slideIn" 
-        key={currentSlide.id}
-        style={{
-          display: 'flex',
-          flexDirection: 
-            currentSlide.code_position === 'right' ? 'row' : 'column',
-          gap: isFullscreen ? '64px' : '48px',
-          alignItems: currentSlide.code_position === 'right' ? 'stretch' : 'center'
-        }}
-      >
-        {/* Main Content Area (Text + Optional Image) */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '24px', width: '100%' }}>
-          <div 
-            style={{ 
-              display: 'flex',
-              flexDirection: 
-                currentSlide.image_position === 'top' ? 'column' :
-                currentSlide.image_position === 'bottom' ? 'column-reverse' :
-                currentSlide.image_position === 'left' ? 'row' : 'row-reverse',
-              gap: isFullscreen ? '48px' : '32px',
-              alignItems: (currentSlide.image_position === 'left' || currentSlide.image_position === 'right') ? 'center' : 'stretch'
-            }}
-          >
-            {currentSlide.image && (
-              <div style={{ 
-                flex: (currentSlide.image_position === 'left' || currentSlide.image_position === 'right') ? `0 0 ${currentSlide.image_width || 50}%` : 'none',
-                width: (currentSlide.image_position === 'top' || currentSlide.image_position === 'bottom') ? `${currentSlide.image_width || 100}%` : 'auto',
-                margin: (currentSlide.image_position === 'top' || currentSlide.image_position === 'bottom') ? '0 auto' : '0',
-                borderRadius: '24px', 
-                overflow: 'hidden', 
-                boxShadow: '0 20px 40px rgba(0,0,0,0.08), 0 0 0 1px var(--border)',
-                maxHeight: (currentSlide.image_position === 'top' || currentSlide.image_position === 'bottom') ? '450px' : 'none',
-                transition: 'all 0.4s ease'
-              }}>
-                <img 
-                  src={`${process.env.NEXT_PUBLIC_STORAGE_URL || 'http://localhost:8080/storage'}/${currentSlide.image}`} 
-                  alt={currentSlide.title} 
-                  style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', background: '#f8fafc' }} 
-                />
+      {/* Dynamic Content Area */}
+      <div className="slide-viewport">
+        <div
+          className="slide-layout-engine animate-slideIn"
+          key={currentSlide.id}
+          data-layout={currentSlide.layout_type || 'standard'}
+          data-code-pos={currentSlide.code_snippet ? currentSlide.code_position : 'none'}
+        >
+          {/* Main Content (Text + Images) */}
+          <div className="main-content-area">
+            {/* TOP SLOT IMAGES */}
+            {(currentSlide.image_position === 'top' || currentSlide.secondary_image_position === 'top') && (
+              <div style={{ display: 'flex', gap: '24px', marginBottom: '32px', width: '100%', justifyContent: 'center' }}>
+                {currentSlide.image_position === 'top' && currentSlide.image && (
+                  <div className="slide-image-wrapper animate-slideIn" style={{ width: `${currentSlide.image_width || 100}%` }}>
+                    <img src={`${storageUrl}/${currentSlide.image}`} alt="" className="slide-img" />
+                  </div>
+                )}
+                {currentSlide.secondary_image_position === 'top' && currentSlide.secondary_image && (
+                  <div className="slide-image-wrapper animate-slideIn" style={{ width: `${currentSlide.secondary_image_width || 100}%` }}>
+                    <img src={`${storageUrl}/${currentSlide.secondary_image}`} alt="" className="slide-img" />
+                  </div>
+                )}
               </div>
             )}
-            <div style={{ flex: 1, maxWidth: (currentSlide.image_position === 'top' || currentSlide.image_position === 'bottom') ? '900px' : 'none', margin: (currentSlide.image_position === 'top' || currentSlide.image_position === 'bottom') ? '0 auto' : '0' }}>
-              <div 
-                className="prose-content"
-                dangerouslySetInnerHTML={{ __html: currentSlide.content }} 
-                style={{ 
-                  fontSize: isFullscreen ? '22px' : '18px', 
-                  lineHeight: '1.8',
-                  color: 'var(--text-secondary)'
-                }}
-              />
+
+            <div
+              className="content-flex-wrapper"
+              style={{
+                flexDirection: 'row' // Default horizontal flow for Left/Right slots
+              }}
+            >
+              {/* LEFT SLOT IMAGES */}
+              {(currentSlide.image_position === 'left' || currentSlide.secondary_image_position === 'left') && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', flex: '1.1' }}>
+                  {currentSlide.image_position === 'left' && currentSlide.image && (
+                    <div className="slide-image-wrapper animate-slideIn" style={{ width: `${currentSlide.image_width || 100}%`, transform: 'rotate(-1deg)' }}>
+                      <img src={`${storageUrl}/${currentSlide.image}`} alt="" className="slide-img" />
+                    </div>
+                  )}
+                  {currentSlide.secondary_image_position === 'left' && currentSlide.secondary_image && (
+                    <div className="slide-image-wrapper animate-slideIn" style={{ width: `${currentSlide.secondary_image_width || 100}%`, transform: 'rotate(1deg)' }}>
+                      <img src={`${storageUrl}/${currentSlide.secondary_image}`} alt="" className="slide-img" />
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Textual Content Area */}
+              <div className="text-content-wrapper">
+                <div
+                  className="prose-content"
+                  dangerouslySetInnerHTML={{
+                    __html: useMemo(() => {
+                      let html = marked.parse(currentSlide.content || '') as string;
+                      html = html.replace(/<strong>(\w)<\/strong>(\w+)/gi, '<strong>$1$2</strong>');
+                      const titlePattern = new RegExp(`^<h[12][^>]*>${currentSlide.title}<\/h[12]>`, 'i');
+                      return html.replace(titlePattern, '');
+                    }, [currentSlide.content, currentSlide.title])
+                  }}
+                />
+              </div>
+
+              {/* RIGHT SLOT IMAGES */}
+              {(currentSlide.image_position === 'right' || currentSlide.secondary_image_position === 'right') && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', flex: '1.1' }}>
+                  {currentSlide.image_position === 'right' && currentSlide.image && (
+                    <div className="slide-image-wrapper animate-slideIn" style={{ width: `${currentSlide.image_width || 100}%`, transform: 'rotate(-1deg)' }}>
+                      <img src={`${storageUrl}/${currentSlide.image}`} alt="" className="slide-img" />
+                    </div>
+                  )}
+                  {currentSlide.secondary_image_position === 'right' && currentSlide.secondary_image && (
+                    <div className="slide-image-wrapper animate-slideIn" style={{ width: `${currentSlide.secondary_image_width || 100}%`, transform: 'rotate(1deg)' }}>
+                      <img src={`${storageUrl}/${currentSlide.secondary_image}`} alt="" className="slide-img" />
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
+
+            {/* BOTTOM SLOT IMAGES */}
+            {(currentSlide.image_position === 'bottom' || currentSlide.secondary_image_position === 'bottom') && (
+              <div style={{ display: 'flex', gap: '24px', marginTop: '32px', width: '100%', justifyContent: 'center' }}>
+                {currentSlide.image_position === 'bottom' && currentSlide.image && (
+                  <div className="slide-image-wrapper animate-slideIn" style={{ width: `${currentSlide.image_width || 100}%` }}>
+                    <img src={`${storageUrl}/${currentSlide.image}`} alt="" className="slide-img" />
+                  </div>
+                )}
+                {currentSlide.secondary_image_position === 'bottom' && currentSlide.secondary_image && (
+                  <div className="slide-image-wrapper animate-slideIn" style={{ width: `${currentSlide.secondary_image_width || 100}%` }}>
+                    <img src={`${storageUrl}/${currentSlide.secondary_image}`} alt="" className="slide-img" />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Code Snippet (Bottom Position) */}
+            {currentSlide.code_snippet && currentSlide.code_position === 'bottom' && currentSlide.layout_type !== 'full-code' && (
+              <CodeSnippet currentSlide={currentSlide} isFullscreen={isFullscreen} />
+            )}
           </div>
 
-          {/* Code Snippet at Bottom */}
-          {currentSlide.code_snippet && currentSlide.code_position === 'bottom' && (
-             <div style={{ 
-               marginTop: '32px', borderRadius: '16px', overflow: 'hidden', 
-               background: currentSlide.code_theme === 'browser' ? '#ffffff' : currentSlide.code_theme === 'editor' ? '#1e1e1e' : '#0f172a',
-               border: currentSlide.code_theme === 'browser' ? '1px solid #e2e8f0' : '1px solid #1e293b', 
-               boxShadow: '0 10px 30px rgba(0,0,0,0.15)' 
-             }}>
-                <div style={{ 
-                  padding: '12px 20px', display: 'flex', alignItems: 'center', gap: '8px', 
-                  background: currentSlide.code_theme === 'browser' ? '#f1f5f9' : currentSlide.code_theme === 'editor' ? '#2d2d2d' : '#1e293b',
-                  borderBottom: currentSlide.code_theme === 'browser' ? '1px solid #e2e8f0' : '1px solid #334155' 
-                }}>
-                   {currentSlide.code_theme !== 'editor' && (
-                     <div style={{ display: 'flex', gap: '6px' }}>
-                        <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ff5f56' }} /><div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ffbd2e' }} /><div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#27c93f' }} />
-                     </div>
-                   )}
-                   {currentSlide.code_theme === 'browser' ? (
-                     <div style={{ flex: 1, margin: '0 16px', background: 'white', borderRadius: '6px', height: '24px', display: 'flex', alignItems: 'center', padding: '0 12px', border: '1px solid #e2e8f0' }}>
-                       <span style={{ fontSize: '10px', color: '#94a3b8' }}>localhost:3000</span>
-                     </div>
-                   ) : (
-                     <span style={{ fontSize: '11px', color: '#94a3b8', marginLeft: currentSlide.code_theme === 'editor' ? '0' : '12px', fontWeight: 600, letterSpacing: '0.05em' }}>
-                       {currentSlide.code_theme === 'editor' ? 'editor.ts' : 'TERMINAL'}
-                     </span>
-                   )}
-                </div>
-                <pre style={{ 
-                  padding: '24px', margin: 0, fontSize: isFullscreen ? '18px' : '14px', fontFamily: 'monospace', overflowX: 'auto', lineHeight: '1.7',
-                  color: currentSlide.code_theme === 'browser' ? '#334155' : '#e2e8f0'
-                }}><code>{currentSlide.code_snippet}</code></pre>
-             </div>
+          {/* Code Snippet (Side Position / Full Code) */}
+          {currentSlide.code_snippet && (currentSlide.code_position === 'right' || currentSlide.layout_type === 'full-code') && (
+            <div className="side-code-area">
+              <CodeSnippet currentSlide={currentSlide} isFullscreen={isFullscreen} />
+            </div>
           )}
         </div>
-
-        {/* Code Snippet on Right Side */}
-        {currentSlide.code_snippet && currentSlide.code_position === 'right' && (
-           <div style={{ 
-             flex: '0 0 45%', borderRadius: '20px', overflow: 'hidden', display: 'flex', flexDirection: 'column',
-             background: currentSlide.code_theme === 'browser' ? '#ffffff' : currentSlide.code_theme === 'editor' ? '#1e1e1e' : '#0f172a',
-             border: currentSlide.code_theme === 'browser' ? '1px solid #e2e8f0' : '1px solid #1e293b', 
-             boxShadow: '0 20px 50px rgba(0,0,0,0.15)'
-           }}>
-              <div style={{ 
-                padding: '14px 20px', display: 'flex', alignItems: 'center', gap: '8px', 
-                background: currentSlide.code_theme === 'browser' ? '#f1f5f9' : currentSlide.code_theme === 'editor' ? '#2d2d2d' : '#1e293b',
-                borderBottom: currentSlide.code_theme === 'browser' ? '1px solid #e2e8f0' : '1px solid #334155' 
-              }}>
-                 {currentSlide.code_theme !== 'editor' && (
-                   <div style={{ display: 'flex', gap: '6px' }}>
-                      <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ff5f56' }} /><div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ffbd2e' }} /><div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#27c93f' }} />
-                   </div>
-                 )}
-                 {currentSlide.code_theme === 'browser' ? (
-                   <div style={{ flex: 1, margin: '0 16px', background: 'white', borderRadius: '6px', height: '24px', display: 'flex', alignItems: 'center', padding: '0 12px', border: '1px solid #e2e8f0' }}>
-                     <span style={{ fontSize: '10px', color: '#94a3b8' }}>localhost:3000</span>
-                   </div>
-                 ) : (
-                   <span style={{ fontSize: '11px', color: '#94a3b8', marginLeft: currentSlide.code_theme === 'editor' ? '0' : '12px', fontWeight: 600, letterSpacing: '0.05em' }}>
-                     {currentSlide.code_theme === 'editor' ? 'editor.ts' : 'TERMINAL'}
-                   </span>
-                 )}
-              </div>
-              <pre style={{ 
-                flex: 1, padding: '24px', margin: 0, fontSize: isFullscreen ? '18px' : '14px', fontFamily: 'monospace', overflowX: 'auto', lineHeight: '1.7',
-                color: currentSlide.code_theme === 'browser' ? '#334155' : '#e2e8f0'
-              }}><code>{currentSlide.code_snippet}</code></pre>
-           </div>
-        )}
       </div>
 
-      <div className="slide-footer">
-        <button 
-          className="btn btn-ghost" 
-          style={{ padding: '10px 16px', borderRadius: '12px' }}
-          onClick={() => setCurrentIndex((prev) => Math.max(prev - 1, 0))}
+      {/* Premium Footer Controls */}
+      <div className="slide-viewer-footer">
+        <button
+          className="nav-btn prev"
+          onClick={() => setCurrentIndex(prev => Math.max(prev - 1, 0))}
           disabled={currentIndex === 0}
         >
-          <ChevronLeft size={18} /> Prev
+          <ChevronLeft size={24} />
+          <span>Previous</span>
         </button>
-        
-        <div className="slide-progress">
+
+        <div className="slide-pagination">
           {slides.map((_, idx) => (
-            <div 
-              key={idx} 
-              className={`slide-dot ${idx === currentIndex ? "active" : ""}`}
+            <button
+              key={idx}
+              className={`pagination-dot ${idx === currentIndex ? 'active' : ''}`}
               onClick={() => setCurrentIndex(idx)}
-              title={`Go to slide ${idx + 1}`}
             />
           ))}
         </div>
 
-        <button 
-          className="btn btn-primary" 
-          style={{ padding: '10px 20px', borderRadius: '12px' }}
-          onClick={() => setCurrentIndex((prev) => Math.min(prev + 1, slides.length - 1))}
+        <button
+          className="nav-btn next"
+          onClick={() => setCurrentIndex(prev => Math.min(prev + 1, slides.length - 1))}
           disabled={currentIndex === slides.length - 1}
         >
-          Next <ChevronRight size={18} />
+          <span>Next</span>
+          <ChevronRight size={24} />
         </button>
       </div>
+
+      <style jsx>{`
+        .slide-viewer-container {
+          --slide-bg: #ffffff;
+          --slide-text: #1e293b;
+          --slide-border: rgba(226, 232, 240, 0.6);
+          --slide-accent: #6366f1;
+          --slide-header-h: 60px;
+          --slide-footer-h: 72px;
+          --radius-lg: 32px;
+          --radius-md: 20px;
+          --shadow-premium: 0 30px 60px -12px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0,0,0,0.02);
+          
+          display: flex;
+          flex-direction: column;
+          background: var(--slide-bg);
+          border-radius: var(--radius-lg);
+          border: 1px solid var(--slide-border);
+          overflow: hidden;
+          position: relative;
+          min-height: 680px;
+          box-shadow: var(--shadow-premium);
+          transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .slide-viewer-container.is-fullscreen {
+          position: fixed;
+          inset: 0;
+          width: 100vw;
+          height: 100vh;
+          border-radius: 0;
+          z-index: 9999;
+          margin: 0;
+        }
+
+        .slide-viewer-header {
+          height: var(--slide-header-h);
+          padding: 0 40px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          border-bottom: 1px solid var(--slide-border);
+          background: rgba(255, 255, 255, 0.5);
+          backdrop-filter: blur(20px);
+          z-index: 20;
+        }
+
+        .slide-info {
+          display: flex;
+          align-items: center;
+          gap: 20px;
+        }
+
+        .slide-type-badge {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          padding: 4px 12px;
+          background: var(--slide-accent);
+          color: white;
+          border-radius: 100px;
+          font-size: 10px;
+          font-weight: 800;
+          letter-spacing: 0.1em;
+          box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+        }
+
+        .slide-counter {
+          font-size: 12px;
+          font-weight: 700;
+          color: #94a3b8;
+        }
+
+        .slide-counter span {
+          opacity: 0.4;
+        }
+
+        .header-divider {
+          width: 1px;
+          height: 20px;
+          background: var(--slide-border);
+        }
+
+        .slide-title {
+          font-size: 15px;
+          font-weight: 700;
+          color: #64748b;
+          margin: 0;
+          letter-spacing: -0.01em;
+        }
+
+        .fullscreen-toggle {
+          width: 40px;
+          height: 40px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 12px;
+          border: none;
+          background: transparent;
+          color: #94a3b8;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .fullscreen-toggle:hover {
+          background: #f1f5f9;
+          color: var(--slide-accent);
+        }
+
+        .slide-viewport {
+          flex: 1;
+          position: relative;
+          overflow-y: auto;
+          background: radial-gradient(circle at top left, #ffffff 0%, #f8fafc 100%);
+          scrollbar-width: thin;
+          scrollbar-color: #e2e8f0 transparent;
+        }
+
+        .slide-layout-engine {
+          min-height: 100%;
+          padding: 80px 120px;
+          display: flex;
+          gap: 64px;
+          align-items: center;
+          justify-content: center;
+          width: 100%;
+          margin: 0 auto;
+        }
+
+        /* Centered Layout */
+        .slide-layout-engine[data-layout="centered"] {
+          text-align: center;
+          padding: 80px 160px;
+        }
+
+        .slide-layout-engine[data-layout="centered"] .content-flex-wrapper {
+          flex-direction: column !important;
+          align-items: center;
+          text-align: center;
+        }
+
+        /* Split Screen Layout */
+        .slide-layout-engine[data-layout="split"] .content-flex-wrapper {
+          gap: 0;
+          width: 100%;
+        }
+
+        .slide-layout-engine[data-layout="split"] .text-content-wrapper,
+        .slide-layout-engine[data-layout="split"] .images-grid {
+          flex: 1 1 50% !important;
+          padding: 0 40px;
+        }
+
+        /* Full Code Layout */
+        .slide-layout-engine[data-layout="full-code"] .images-grid {
+          display: none !important;
+        }
+
+        .slide-layout-engine[data-layout="full-code"] .main-content-area {
+          flex: 0 0 40%;
+        }
+
+        .slide-layout-engine[data-code-pos="right"] {
+          flex-direction: row;
+        }
+
+        .slide-layout-engine[data-code-pos="bottom"],
+        .slide-layout-engine[data-code-pos="none"] {
+          flex-direction: column;
+          width: 100%;
+          margin: 0 auto;
+        }
+
+        .slide-layout-engine[data-layout="full-code"] {
+          flex-direction: row !important;
+          max-width: 100% !important;
+          padding: 40px;
+        }
+
+        .main-content-area {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          gap: 48px;
+          width: 100%;
+        }
+
+        .content-flex-wrapper {
+          display: flex;
+          gap: 32px;
+          align-items: center;
+        }
+
+        .images-grid {
+          width: 100%;
+        }
+
+        .slide-image-wrapper {
+          border-radius: var(--radius-md);
+          overflow: hidden;
+          background: white;
+          box-shadow: 0 20px 40px -15px rgba(0,0,0,0.1), 0 0 0 1px var(--slide-border);
+          aspect-ratio: 16/10;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .slide-image-wrapper:hover {
+          transform: scale(1.02);
+        }
+
+        .slide-img {
+          width: 90%;
+          height: 90%;
+          object-fit: contain;
+        }
+
+        .text-content-wrapper {
+          flex: 1;
+          min-width: 350px;
+        }
+
+        .prose-content {
+          font-size: 20px;
+          line-height: 1.8;
+          color: #1e293b;
+          font-weight: 450;
+        }
+
+        .prose-content :global(h1), .prose-content :global(h2) {
+          color: #0f172a;
+          font-weight: 800;
+          letter-spacing: -0.03em;
+          margin-bottom: 24px;
+          text-align: inherit;
+        }
+
+        .prose-content :global(strong) {
+          color: var(--slide-accent);
+          font-weight: 800;
+          background: rgba(99, 102, 241, 0.1);
+          padding: 1px 6px;
+          border-radius: 6px;
+          display: inline-block;
+          line-height: 1.1;
+          vertical-align: baseline;
+          margin: 0 1px;
+          transition: all 0.2s ease;
+        }
+
+        .slide-layout-engine[data-layout="centered"] .prose-content :global(strong) {
+          display: inline-block;
+        }
+
+        .prose-content :global(ul) {
+          list-style: none;
+          padding: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+          align-items: inherit;
+        }
+
+        .prose-content :global(li) {
+          position: relative;
+          padding-left: 28px;
+          color: inherit;
+        }
+
+        .slide-layout-engine[data-layout="centered"] .prose-content :global(li) {
+          padding-left: 0;
+        }
+
+        .prose-content :global(li::before) {
+          content: "";
+          position: absolute;
+          left: 0;
+          top: 12px;
+          width: 16px;
+          height: 2px;
+          background: var(--slide-accent);
+          border-radius: 2px;
+          opacity: 0.5;
+        }
+
+        .slide-layout-engine[data-layout="centered"] .prose-content :global(li::before) {
+          display: none;
+        }
+
+        .is-fullscreen .prose-content {
+          font-size: 26px;
+        }
+
+        .side-code-area {
+          flex: 0 0 48%;
+          display: flex;
+          flex-direction: column;
+          min-height: 500px;
+        }
+
+        .slide-viewer-footer {
+          height: var(--slide-footer-h);
+          padding: 0 40px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          border-top: 1px solid var(--slide-border);
+          background: rgba(255, 255, 255, 0.7);
+          backdrop-filter: blur(20px);
+          z-index: 20;
+        }
+
+        .nav-btn {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 12px 28px;
+          border-radius: 18px;
+          border: 1px solid var(--slide-border);
+          background: white;
+          color: #475569;
+          font-weight: 700;
+          font-size: 15px;
+          cursor: pointer;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .nav-btn:not(:disabled):hover {
+          background: #f8fafc;
+          border-color: #cbd5e1;
+          transform: translateY(-2px);
+          box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);
+        }
+
+        .nav-btn:disabled {
+          opacity: 0.3;
+          cursor: not-allowed;
+          filter: grayscale(1);
+        }
+
+        .nav-btn.next {
+          background: linear-gradient(135deg, var(--slide-accent) 0%, #4f46e5 100%);
+          color: white;
+          border: none;
+          box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.4);
+        }
+
+        .nav-btn.next:not(:disabled):hover {
+          background: white;
+          color: #0f172a;
+          border: 1px solid var(--slide-accent);
+          box-shadow: 0 15px 35px -5px rgba(99, 102, 241, 0.3);
+          transform: translateY(-2px) scale(1.02);
+        }
+
+        .slide-pagination {
+          display: flex;
+          gap: 12px;
+          background: #f1f5f9;
+          padding: 6px 12px;
+          border-radius: 100px;
+        }
+
+        .pagination-dot {
+          width: 10px;
+          height: 10px;
+          border-radius: 50%;
+          background: #cbd5e1;
+          border: none;
+          cursor: pointer;
+          transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+          padding: 0;
+        }
+
+        .pagination-dot.active {
+          width: 32px;
+          border-radius: 100px;
+          background: var(--slide-accent);
+          box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);
+        }
+
+        @keyframes slideIn {
+          from { opacity: 0; transform: translateY(30px) scale(0.98); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .animate-slideIn {
+          animation: slideIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+      `}</style>
+    </div>
+  );
+}
+
+function CodeSnippet({ currentSlide, isFullscreen }: { currentSlide: Slide, isFullscreen: boolean }) {
+  const theme = currentSlide.code_theme || 'terminal';
+
+  return (
+    <div className={`code-window theme-${theme}`}>
+      <div className="code-header">
+        {theme !== 'editor' && (
+          <div className="window-dots">
+            <span className="dot red" /><span className="dot yellow" /><span className="dot green" />
+          </div>
+        )}
+        <div className="window-label">
+          {theme === 'browser' ? <Globe size={14} /> : theme === 'terminal' ? <Terminal size={14} /> : <Code2 size={14} />}
+          <span>{theme === 'browser' ? 'localhost:3000' : theme === 'terminal' ? 'bash' : 'editor.tsx'}</span>
+        </div>
+      </div>
+      <pre className="code-body">
+        <code>{currentSlide.code_snippet}</code>
+      </pre>
+
+      <style jsx>{`
+        .code-window {
+          border-radius: 20px;
+          overflow: hidden;
+          box-shadow: 0 40px 80px -20px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.05);
+          display: flex;
+          flex-direction: column;
+          flex: 1;
+          background: #0f172a;
+          border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .theme-terminal { background: #0f172a; color: #e2e8f0; }
+        .theme-editor { background: #1e1e1e; color: #d4d4d4; }
+        .theme-browser { background: #ffffff; color: #334155; border: 1px solid #e2e8f0; }
+
+        .code-header {
+          height: 48px;
+          display: flex;
+          align-items: center;
+          padding: 0 20px;
+          gap: 20px;
+          background: rgba(0,0,0,0.2);
+        }
+
+        .theme-browser .code-header { background: #f8fafc; border-bottom: 1px solid #e2e8f0; }
+
+        .window-dots {
+          display: flex;
+          gap: 10px;
+        }
+
+        .dot { width: 12px; height: 12px; border-radius: 50%; }
+        .red { background: #ff5f56; box-shadow: 0 0 8px rgba(255,95,86,0.3); }
+        .yellow { background: #ffbd2e; box-shadow: 0 0 8px rgba(255,189,46,0.3); }
+        .green { background: #27c93f; box-shadow: 0 0 8px rgba(39,201,63,0.3); }
+
+        .window-label {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          font-size: 12px;
+          font-weight: 700;
+          letter-spacing: 0.05em;
+          opacity: 0.6;
+          color: #94a3b8;
+        }
+
+        .theme-browser .window-label { color: #64748b; }
+
+        .code-body {
+          margin: 0;
+          padding: 32px;
+          font-family: 'JetBrains Mono', 'Fira Code', monospace;
+          font-size: ${isFullscreen ? '20px' : '15px'};
+          line-height: 1.8;
+          overflow-x: auto;
+          white-space: pre-wrap;
+        }
+      `}</style>
     </div>
   );
 }

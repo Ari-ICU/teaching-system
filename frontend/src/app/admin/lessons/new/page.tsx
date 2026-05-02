@@ -42,7 +42,14 @@ export default function NewLessonPage() {
         const data = await res.json();
         const mods = data.data || [];
         setModules(mods);
-        if (mods.length > 0) {
+        
+        // Check for module_id in query params
+        const urlParams = new URLSearchParams(window.location.search);
+        const queryModuleId = urlParams.get('module_id');
+
+        if (queryModuleId) {
+          setFormData(prev => ({ ...prev, module_id: queryModuleId }));
+        } else if (mods.length > 0) {
           setFormData(prev => ({ ...prev, module_id: mods[0].id.toString() }));
         }
       }

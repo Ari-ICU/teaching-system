@@ -16,7 +16,7 @@ class CourseController extends Controller
     {
         $query = Course::where('is_active', true)
             ->with(['modules' => function($q) {
-                $q->where('is_active', true)->orderBy('modules.order');
+                $q->where('is_active', true)->withCount('lessons')->orderBy('modules.order');
             }])
             ->withCount('modules')
             ->orderBy('order');
@@ -81,7 +81,7 @@ class CourseController extends Controller
 
         return response()->json([
             'data' => $query->with(['modules' => function($q) {
-                $q->where('is_active', true)->orderBy('order');
+                $q->where('is_active', true)->withCount('lessons')->orderBy('order');
             }])->withCount('modules')->get()
         ]);
     }

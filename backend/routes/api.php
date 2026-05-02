@@ -63,12 +63,15 @@ Route::middleware(['auth:api', 'role:admin,teacher'])->group(function () {
     
     // Slides reorder
     Route::post('/slides/reorder', [SlideController::class, 'reorder']);
+    Route::post('/slides/{slide}/duplicate', [SlideController::class, 'duplicate']);
     Route::apiResource('slides', SlideController::class)->except(['index', 'show', 'byLesson']);
 
     // Code Examples
+    Route::post('/code-examples/{codeExample}/duplicate', [CodeExampleController::class, 'duplicate']);
     Route::apiResource('code-examples', CodeExampleController::class)->except(['index', 'show', 'byLesson']);
 
     // Exercises
+    Route::post('/exercises/{exercise}/duplicate', [ExerciseController::class, 'duplicate']);
     Route::apiResource('exercises', ExerciseController::class)->except(['index', 'show', 'byLesson']);
 });
 

@@ -101,7 +101,7 @@ class ModuleController extends Controller
             'lessons.slides', 
             'lessons.codeExamples', 
             'lessons.exercises'
-        ]);
+        ])->loadCount('lessons');
 
         return response()->json([
             'success' => true,

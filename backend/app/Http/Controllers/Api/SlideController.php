@@ -37,15 +37,24 @@ class SlideController extends Controller
             'type'           => 'required|string|max:50',
             'order'          => 'nullable|integer',
             'image'          => 'nullable|image|max:2048',
+            'secondary_image'=> 'nullable|image|max:2048',
             'image_position' => 'nullable|string|in:top,bottom,left,right',
-            'image_width'    => 'nullable|string',
-            'code_position'  => 'nullable|string|in:bottom,right',
+            'image_width'             => 'nullable|string',
+            'secondary_image_position'=> 'nullable|string|in:top,bottom,left,right',
+            'secondary_image_width'   => 'nullable|string',
+            'code_position'           => 'nullable|string|in:bottom,right',
             'code_theme'     => 'nullable|string|in:terminal,browser,editor',
+            'layout_type'    => 'nullable|string',
         ]);
 
         if ($request->hasFile('image')) {
             $path = $request->file('image')->store('slides', 'public');
             $validated['image'] = $path;
+        }
+
+        if ($request->hasFile('secondary_image')) {
+            $path = $request->file('secondary_image')->store('slides', 'public');
+            $validated['secondary_image'] = $path;
         }
 
         $slide = Slide::create($validated);
@@ -67,10 +76,14 @@ class SlideController extends Controller
             'type'           => 'sometimes|required|string|max:50',
             'order'          => 'nullable|integer',
             'image'          => 'nullable|image|max:2048',
+            'secondary_image'=> 'nullable|image|max:2048',
             'image_position' => 'nullable|string|in:top,bottom,left,right',
-            'image_width'    => 'nullable|string',
-            'code_position'  => 'nullable|string|in:bottom,right',
+            'image_width'             => 'nullable|string',
+            'secondary_image_position'=> 'nullable|string|in:top,bottom,left,right',
+            'secondary_image_width'   => 'nullable|string',
+            'code_position'           => 'nullable|string|in:bottom,right',
             'code_theme'     => 'nullable|string|in:terminal,browser,editor',
+            'layout_type'    => 'nullable|string',
         ]);
 
         if ($request->hasFile('image')) {
@@ -80,6 +93,30 @@ class SlideController extends Controller
             }
             $path = $request->file('image')->store('slides', 'public');
             $validated['image'] = $path;
+        }
+
+        if ($request->hasFile('secondary_image')) {
+            // Delete old image if exists
+            if ($slide->secondary_image) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($slide->secondary_image);
+            }
+            $path = $request->file('secondary_image')->store('slides', 'public');
+            $validated['secondary_image'] = $path;
+        }
+
+        // Handle removals
+        if ($request->boolean('remove_image')) {
+            if ($slide->image) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($slide->image);
+            }
+            $validated['image'] = null;
+        }
+
+        if ($request->boolean('remove_secondary_image')) {
+            if ($slide->secondary_image) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($slide->secondary_image);
+            }
+            $validated['secondary_image'] = null;
         }
 
         $slide->update($validated);
@@ -113,5 +150,25 @@ class SlideController extends Controller
         }
 
         return response()->json(['message' => 'Order updated successfully']);
+    }
+
+    public function duplicate(Slide $slide): JsonResponse
+    {
+        $newSlide = $slide->replicate();
+        $newSlide->title = $newSlide->title . ' (Copy)';
+        $newSlide->order = $slide->order + 1;
+        $newSlide->save();
+
+        // Shift others' order
+        Slide::where('lesson_id', $slide->lesson_id)
+            ->where('id', '!=', $newSlide->id)
+            ->where('order', '>=', $newSlide->order)
+            ->increment('order');
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Slide duplicated successfully',
+            'data'    => $newSlide,
+        ]);
     }
 }

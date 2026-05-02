@@ -2,7 +2,7 @@
 
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
-import { ArrowLeft, Plus, Edit2, Trash2, FileText, Code, ChevronUp, ChevronDown, Loader2, BookOpen, AlertCircle, PlayCircle } from "lucide-react";
+import { ArrowLeft, Plus, Edit2, Trash2, FileText, Code, ChevronUp, ChevronDown, Loader2, BookOpen, AlertCircle, PlayCircle, Copy } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
 export default function AdminSlidesPage({ params }: { params: Promise<{ id: string }> }) {
@@ -128,6 +128,39 @@ export default function AdminSlidesPage({ params }: { params: Promise<{ id: stri
     } catch (error) { console.error(error); }
   };
 
+  const handleDuplicateSlide = async (id: number) => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost/api';
+      const res = await fetch(`${apiUrl}/slides/${id}/duplicate`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+      });
+      if (res.ok) fetchData();
+    } catch (error) { console.error(error); }
+  };
+
+  const handleDuplicateCode = async (id: number) => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost/api';
+      const res = await fetch(`${apiUrl}/code-examples/${id}/duplicate`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+      });
+      if (res.ok) fetchData();
+    } catch (error) { console.error(error); }
+  };
+
+  const handleDuplicateExercise = async (id: number) => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost/api';
+      const res = await fetch(`${apiUrl}/exercises/${id}/duplicate`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+      });
+      if (res.ok) fetchData();
+    } catch (error) { console.error(error); }
+  };
+
   if (authLoading) return null;
 
   return (
@@ -196,6 +229,7 @@ export default function AdminSlidesPage({ params }: { params: Promise<{ id: stri
                   <p style={{ fontSize: '14px', color: 'var(--text-muted)' }}>{slide.content.replace(/<[^>]*>/g, '').substring(0, 100)}...</p>
                 </div>
                 <div style={{ display: 'flex', gap: '12px' }}>
+                   <button onClick={() => handleDuplicateSlide(slide.id)} className="btn btn-ghost" style={{ padding: '10px', border: '1px solid var(--border)' }} title="Duplicate Slide"><Copy size={18} color="var(--emerald)" /></button>
                    <Link href={`/admin/lessons/${lessonId}/slides/${slide.id}/edit`} className="btn btn-ghost" style={{ padding: '10px', border: '1px solid var(--border)' }}><Edit2 size={18} color="var(--indigo)" /></Link>
                    <button onClick={() => handleDeleteSlide(slide.id)} className="btn btn-ghost" style={{ padding: '10px', border: '1px solid var(--border)' }}><Trash2 size={18} color="var(--rose)" /></button>
                 </div>
@@ -226,6 +260,7 @@ export default function AdminSlidesPage({ params }: { params: Promise<{ id: stri
                   <p style={{ fontSize: '14px', color: 'var(--text-muted)' }}>{example.language.toUpperCase()} • {example.code.substring(0, 80)}...</p>
                 </div>
                 <div style={{ display: 'flex', gap: '12px' }}>
+                   <button onClick={() => handleDuplicateCode(example.id)} className="btn btn-ghost" style={{ padding: '10px', border: '1px solid var(--border)' }} title="Duplicate Demo"><Copy size={18} color="var(--emerald)" /></button>
                    <Link href={`/admin/lessons/${lessonId}/code-examples/${example.id}/edit`} className="btn btn-ghost" style={{ padding: '10px', border: '1px solid var(--border)' }}><Edit2 size={18} color="var(--emerald)" /></Link>
                    <button onClick={() => handleDeleteCode(example.id)} className="btn btn-ghost" style={{ padding: '10px', border: '1px solid var(--border)' }}><Trash2 size={18} color="var(--rose)" /></button>
                 </div>
@@ -261,6 +296,7 @@ export default function AdminSlidesPage({ params }: { params: Promise<{ id: stri
                   <p style={{ fontSize: '14px', color: 'var(--text-muted)' }}>{exercise.question.substring(0, 100)}...</p>
                 </div>
                 <div style={{ display: 'flex', gap: '12px' }}>
+                   <button onClick={() => handleDuplicateExercise(exercise.id)} className="btn btn-ghost" style={{ padding: '10px', border: '1px solid var(--border)' }} title="Duplicate Exercise"><Copy size={18} color="var(--emerald)" /></button>
                    <Link href={`/admin/lessons/${lessonId}/exercises/${exercise.id}/edit`} className="btn btn-ghost" style={{ padding: '10px', border: '1px solid var(--border)' }}><Edit2 size={18} color="var(--amber)" /></Link>
                    <button onClick={() => handleDeleteExercise(exercise.id)} className="btn btn-ghost" style={{ padding: '10px', border: '1px solid var(--border)' }}><Trash2 size={18} color="var(--rose)" /></button>
                 </div>

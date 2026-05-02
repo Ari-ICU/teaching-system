@@ -97,6 +97,10 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 <span className="sidebar-item-icon"><FileJson size={18} /></span>
                 Import Content
               </Link>
+              <Link href="/admin/data" className={`sidebar-item ${pathname === "/admin/data" ? "active" : ""}`}>
+                <span className="sidebar-item-icon"><Layout size={18} /></span>
+                JSON Data Explorer
+              </Link>
             </>
           )}
         </nav>

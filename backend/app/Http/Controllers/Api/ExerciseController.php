@@ -93,4 +93,18 @@ class ExerciseController extends Controller
             'message' => 'Exercise deleted successfully'
         ]);
     }
+
+    public function duplicate(Exercise $exercise): JsonResponse
+    {
+        $newExercise = $exercise->replicate();
+        $newExercise->title = $newExercise->title . ' (Copy)';
+        $newExercise->order = $exercise->order + 1;
+        $newExercise->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Exercise duplicated successfully',
+            'data'    => $newExercise,
+        ]);
+    }
 }
