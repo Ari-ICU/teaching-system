@@ -144,8 +144,22 @@ export default function SlideViewer({ slides }: { slides: Slide[] }) {
                   className="prose-content"
                   dangerouslySetInnerHTML={{
                     __html: useMemo(() => {
-                      let html = marked.parse(currentSlide.content || '') as string;
+                      // Ensure we have a string
+                      const content = currentSlide.content || '';
+                      
+                      // Parse markdown with modern options
+                      // breaks: true allows single newlines to be rendered as <br>
+                      // gfm: true enables GitHub Flavored Markdown (tables, tasklists, etc.)
+                      let html = marked.parse(content, { 
+                        breaks: true, 
+                        gfm: true 
+                      }) as string;
+
+                      // Fix common copy-paste issues where bold tags might be broken across words
                       html = html.replace(/<strong>(\w)<\/strong>(\w+)/gi, '<strong>$1$2</strong>');
+                      
+                      // Filter out the title from the content if it's identical to the header title
+                      // to avoid redundancy on the slide
                       const titlePattern = new RegExp(`^<h[12][^>]*>${currentSlide.title}<\/h[12]>`, 'i');
                       return html.replace(titlePattern, '');
                     }, [currentSlide.content, currentSlide.title])
@@ -475,18 +489,20 @@ export default function SlideViewer({ slides }: { slides: Slide[] }) {
         .prose-content :global(strong) {
           color: var(--slide-accent);
           font-weight: 800;
-          background: rgba(99, 102, 241, 0.1);
-          padding: 1px 6px;
-          border-radius: 6px;
+          background: rgba(99, 102, 241, 0.08);
+          padding: 2px 8px;
+          border-radius: 8px;
           display: inline-block;
-          line-height: 1.1;
-          vertical-align: baseline;
-          margin: 0 1px;
+          line-height: 1.2;
+          vertical-align: middle;
+          margin: 0 2px;
           transition: all 0.2s ease;
+          border-bottom: 2px solid rgba(99, 102, 241, 0.2);
         }
 
         .slide-layout-engine[data-layout="centered"] .prose-content :global(strong) {
           display: inline-block;
+          margin-bottom: 4px;
         }
 
         .prose-content :global(ul) {
@@ -495,33 +511,32 @@ export default function SlideViewer({ slides }: { slides: Slide[] }) {
           display: flex;
           flex-direction: column;
           gap: 16px;
-          align-items: inherit;
+          margin: 24px 0;
+          width: 100%;
         }
 
         .prose-content :global(li) {
           position: relative;
-          padding-left: 28px;
+          padding-left: 32px;
           color: inherit;
+          text-align: left;
         }
 
         .slide-layout-engine[data-layout="centered"] .prose-content :global(li) {
-          padding-left: 0;
+          padding-left: 32px;
+          display: inline-block;
+          max-width: 600px;
+          margin: 0 auto;
         }
 
         .prose-content :global(li::before) {
-          content: "";
+          content: "→";
           position: absolute;
           left: 0;
-          top: 12px;
-          width: 16px;
-          height: 2px;
-          background: var(--slide-accent);
-          border-radius: 2px;
-          opacity: 0.5;
-        }
-
-        .slide-layout-engine[data-layout="centered"] .prose-content :global(li::before) {
-          display: none;
+          top: 0;
+          font-weight: 900;
+          color: var(--slide-accent);
+          opacity: 0.8;
         }
 
         .is-fullscreen .prose-content {

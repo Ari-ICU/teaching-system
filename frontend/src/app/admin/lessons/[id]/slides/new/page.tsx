@@ -8,6 +8,13 @@ import { useAuth } from "@/context/AuthContext";
 import DropdownSelect from "@/components/ui/DropdownSelect";
 import { marked } from "marked";
 import SlideViewer from "@/components/SlideViewer";
+import dynamic from "next/dynamic";
+
+const ReactQuill = dynamic(() => import("react-quill-new"), { 
+  ssr: false,
+  loading: () => <div className="quill-loader">Loading Editor...</div>
+});
+import "react-quill-new/dist/quill.snow.css";
 
 export default function NewSlidePage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -202,21 +209,31 @@ export default function NewSlidePage({ params }: { params: Promise<{ id: string 
               </section>
 
               <section className="form-section">
-                <div className="section-header">
+                <div className="section-header" style={{ marginBottom: '16px' }}>
                   <label className="section-label">Teaching Material</label>
-                  <div className="editor-toolbar">
-                     <button type="button" onClick={() => setFormData({...formData, content: formData.content + '<h2></h2>'})}>H2</button>
-                     <button type="button" onClick={() => setFormData({...formData, content: formData.content + '<strong></strong>'})}>B</button>
-                     <button type="button" onClick={() => setFormData({...formData, content: formData.content + '<code></code>'})}>CODE</button>
-                     <button type="button" onClick={() => setFormData({...formData, content: formData.content + '<ul><li></li></ul>'})}>LIST</button>
+                  <div className="editor-info-badge">
+                    <Type size={12} />
+                    <span>RICH TEXT ENABLED</span>
                   </div>
                 </div>
-                <textarea 
-                  className="content-textarea"
-                  placeholder="Explain your concepts with HTML or plain text..."
-                  value={formData.content}
-                  onChange={(e) => setFormData({...formData, content: e.target.value})}
-                />
+                
+                <div className="rich-editor-wrapper">
+                  <ReactQuill 
+                    theme="snow"
+                    value={formData.content}
+                    onChange={(content) => setFormData({...formData, content})}
+                    placeholder="Describe your concepts, add lists, or format text..."
+                    modules={{
+                      toolbar: [
+                        [{ 'header': [2, 3, false] }],
+                        ['bold', 'italic', 'underline', 'strike'],
+                        [{'list': 'ordered'}, {'list': 'bullet'}],
+                        ['blockquote', 'code-block'],
+                        ['link', 'clean']
+                      ],
+                    }}
+                  />
+                </div>
               </section>
 
               <section className="form-section">
@@ -511,6 +528,64 @@ export default function NewSlidePage({ params }: { params: Promise<{ id: string 
           font-weight: 700;
           color: #64748b;
           cursor: pointer;
+        }
+
+        .quill-loader {
+          height: 300px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: #f8fafc;
+          border-radius: 12px;
+          color: #94a3b8;
+          font-weight: 600;
+          font-size: 14px;
+          border: 1px dashed #e2e8f0;
+        }
+
+        .editor-info-badge {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          padding: 4px 10px;
+          background: #f1f5f9;
+          color: #64748b;
+          border-radius: 100px;
+          font-size: 10px;
+          font-weight: 800;
+          letter-spacing: 0.05em;
+        }
+
+        .rich-editor-wrapper :global(.quill) {
+          border-radius: 16px;
+          overflow: hidden;
+          border: 1px solid #e2e8f0;
+        }
+
+        .rich-editor-wrapper :global(.ql-toolbar) {
+          border: none !important;
+          background: #f8fafc;
+          border-bottom: 1px solid #e2e8f0 !important;
+          padding: 12px;
+        }
+
+        .rich-editor-wrapper :global(.ql-container) {
+          border: none !important;
+          min-height: 300px;
+          font-size: 16px;
+          font-family: inherit;
+        }
+
+        .rich-editor-wrapper :global(.ql-editor) {
+          min-height: 300px;
+          padding: 24px;
+          line-height: 1.8;
+        }
+
+        .rich-editor-wrapper :global(.ql-editor.ql-blank::before) {
+          left: 24px;
+          color: #94a3b8;
+          font-style: normal;
         }
 
         .content-textarea, .code-textarea {
