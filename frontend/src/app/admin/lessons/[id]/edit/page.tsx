@@ -2,7 +2,7 @@
 
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
-import { ArrowLeft, Save, Loader2, AlertCircle, PlayCircle } from "lucide-react";
+import { ArrowLeft, Save, Loader2, AlertCircle, PlayCircle, Clock, ChevronRight, CheckCircle2, Zap } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import DropdownSelect from "@/components/ui/DropdownSelect";
@@ -99,115 +99,168 @@ export default function EditLessonPage({ params }: { params: Promise<{ id: strin
     }
   };
 
-  if (authLoading) return null;
+  if (authLoading || status === "loading_initial") return (
+    <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <Loader2 className="animate-spin text-indigo-500" size={32} />
+    </div>
+  );
 
   if (status === "not_found") {
     return (
-      <div className="page" style={{ textAlign: 'center', padding: '100px' }}>
-        <AlertCircle size={64} color="var(--rose)" style={{ margin: '0 auto 20px' }} />
-        <h2 style={{ fontSize: '24px', fontWeight: 800 }}>Lesson Not Found</h2>
-        <Link href="/admin/lessons" className="btn btn-primary" style={{ marginTop: '32px' }}>Back to Lessons</Link>
+      <div className="min-h-[60vh] flex flex-col items-center justify-center p-10 text-center space-y-6">
+        <div className="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center text-rose-500">
+          <AlertCircle size={40} />
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-3xl font-black text-slate-900">Lesson Not Found</h2>
+          <p className="text-slate-500 font-medium">The topic you're looking for doesn't exist or has been removed.</p>
+        </div>
+        <Link href="/admin/lessons" className="inline-flex items-center justify-center px-8 py-3 bg-indigo-600 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/20 hover:bg-indigo-700 transition-all">
+          Back to Lessons
+        </Link>
       </div>
     );
   }
 
   return (
-    <div className="page" style={{ maxWidth: '850px', margin: '0 auto' }}>
+    <div className="p-6 md:p-10 lg:p-12 max-w-[1000px] mx-auto space-y-10">
       <Toast show={showToast} message="Lesson updated successfully!" onClose={() => setShowToast(false)} />
-      <Link href="/admin/lessons" className="btn btn-ghost" style={{ marginBottom: '24px' }}>
+      
+      <Link href="/admin/lessons" className="inline-flex items-center gap-2 px-4 py-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors font-medium mb-4">
         <ArrowLeft size={16} /> Back to Lessons
       </Link>
 
-      <header className="page-header" style={{ marginBottom: '40px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-           <PlayCircle size={24} color="var(--indigo)" />
-           <span className="badge badge-indigo">EDIT TOPIC</span>
+      <header className="space-y-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
+             <PlayCircle size={22} />
+          </div>
+          <span className="px-3 py-1 bg-indigo-50 text-indigo-600 text-[10px] font-black rounded-full border border-indigo-100 uppercase tracking-widest">
+            EDIT TOPIC
+          </span>
         </div>
-        <h1 className="page-title" style={{ fontSize: '32px' }}>Edit Lesson</h1>
-        <p className="page-subtitle">Refine the title, description, and sequence of this lesson.</p>
+        <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">Edit Lesson Content</h1>
+        <p className="text-slate-500 text-lg font-medium">Refine the title, description, and sequence of this individual topic.</p>
       </header>
 
-      <form className="glass-card" style={{ padding: '40px', background: 'white' }} onSubmit={handleSubmit}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+      <form className="bg-white border border-slate-200 rounded-[48px] p-10 md:p-14 shadow-sm animate-in fade-in slide-in-from-bottom-8 duration-700" onSubmit={handleSubmit}>
+        <div className="space-y-10">
           
-          <div>
-            <label style={{ display: 'block', marginBottom: '10px', fontSize: '14px', fontWeight: 700 }}>Parent Module</label>
-            <DropdownSelect 
-              options={modules.map(mod => ({ value: mod.id.toString(), label: mod.title }))}
-              value={formData.module_id}
-              onChange={(value) => setFormData({...formData, module_id: value})}
-              placeholder="Select a module..."
-            />
-          </div>
-
-          <div>
-            <label style={{ display: 'block', marginBottom: '10px', fontSize: '14px', fontWeight: 700 }}>Lesson Title</label>
-            <input 
-              type="text" required className="url-input" 
-              style={{ width: '100%', padding: '14px' }}
-              value={formData.title}
-              onChange={(e) => setFormData({...formData, title: e.target.value})}
-            />
-          </div>
-
-          <div>
-            <label style={{ display: 'block', marginBottom: '10px', fontSize: '14px', fontWeight: 700 }}>Brief Description</label>
-            <textarea required className="url-input" 
-              style={{ width: '100%', minHeight: '100px', resize: 'vertical', padding: '16px', lineHeight: '1.6' }}
-              value={formData.description}
-              onChange={(e) => setFormData({...formData, description: e.target.value})}
-            />
-          </div>
-
-          <div className="grid-2">
-            <div>
-              <label style={{ display: 'block', marginBottom: '10px', fontSize: '14px', fontWeight: 700 }}>Difficulty Level</label>
+          <div className="space-y-8">
+            <div className="space-y-3">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">PARENT MODULE</label>
               <DropdownSelect 
-                options={[
-                  { value: "beginner", label: "Beginner" },
-                  { value: "intermediate", label: "Intermediate" },
-                  { value: "advanced", label: "Advanced" }
-                ]}
-                value={formData.difficulty}
-                onChange={(value) => setFormData({...formData, difficulty: value})}
+                options={modules.map(mod => ({ value: mod.id.toString(), label: mod.title }))}
+                value={formData.module_id}
+                onChange={(value) => setFormData({...formData, module_id: value})}
+                placeholder="Select a module..."
               />
+              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider ml-1">Moving a lesson will change its position in the curriculum flow.</p>
             </div>
-            
-            <div>
-              <label style={{ display: 'block', marginBottom: '10px', fontSize: '14px', fontWeight: 700 }}>Estimated Duration</label>
-              <input 
-                type="text" className="url-input" 
-                style={{ width: '100%', padding: '14px' }}
-                placeholder="e.g. 45 min"
-                value={formData.duration}
-                onChange={(e) => setFormData({...formData, duration: e.target.value})}
-              />
-            </div>
-          </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px', background: 'var(--bg-secondary)', borderRadius: '12px' }}>
-            <input 
-               type="checkbox" id="is_active"
-               checked={formData.is_active}
-               onChange={(e) => setFormData({...formData, is_active: e.target.checked})}
-               style={{ width: '20px', height: '20px', cursor: 'pointer' }}
-            />
-            <label htmlFor="is_active" style={{ fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>Lesson is published and visible to students</label>
+            <div className="space-y-3">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">LESSON TITLE</label>
+              <input 
+                type="text" required 
+                className="w-full h-16 px-6 bg-slate-50 border-none rounded-2xl text-slate-900 text-xl font-bold focus:ring-4 focus:ring-indigo-500/10 transition-all placeholder:text-slate-300"
+                placeholder="e.g. Understanding React Lifecycle"
+                value={formData.title}
+                onChange={(e) => setFormData({...formData, title: e.target.value})}
+              />
+            </div>
+
+            <div className="space-y-3">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">TOPIC OVERVIEW</label>
+              <textarea required 
+                className="w-full min-h-[140px] p-6 bg-slate-50 border-none rounded-[28px] text-slate-900 font-medium leading-relaxed focus:ring-4 focus:ring-indigo-500/10 transition-all placeholder:text-slate-300 resize-none"
+                placeholder="What will students learn in this specific topic?"
+                value={formData.description}
+                onChange={(e) => setFormData({...formData, description: e.target.value})}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-3">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">DIFFICULTY LEVEL</label>
+                <DropdownSelect 
+                  options={[
+                    { value: "beginner", label: "Beginner" },
+                    { value: "intermediate", label: "Intermediate" },
+                    { value: "advanced", label: "Advanced" }
+                  ]}
+                  value={formData.difficulty}
+                  onChange={(value) => setFormData({...formData, difficulty: value})}
+                />
+              </div>
+              
+              <div className="space-y-3">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">ESTIMATED DURATION</label>
+                <div className="relative group">
+                  <Clock className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" size={20} />
+                  <input 
+                    type="text" 
+                    className="w-full h-16 pl-14 pr-6 bg-slate-50 border-none rounded-2xl text-slate-900 font-bold focus:ring-4 focus:ring-indigo-500/10 transition-all placeholder:text-slate-300" 
+                    placeholder="e.g. 45 min"
+                    value={formData.duration}
+                    onChange={(e) => setFormData({...formData, duration: e.target.value})}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div 
+              className={`
+                p-6 rounded-[28px] border-2 transition-all duration-300 flex items-center justify-between cursor-pointer group
+                ${formData.is_active ? 'bg-indigo-50/50 border-indigo-100 shadow-sm' : 'bg-slate-50 border-transparent hover:bg-slate-100'}
+              `}
+              onClick={() => setFormData({ ...formData, is_active: !formData.is_active })}
+            >
+              <div className="flex items-center gap-4">
+                <div className={`
+                  w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300
+                  ${formData.is_active ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' : 'bg-slate-200 text-slate-400'}
+                `}>
+                  <CheckCircle2 size={22} />
+                </div>
+                <div>
+                  <div className="text-sm font-black text-slate-900 uppercase tracking-widest">Publish Status</div>
+                  <div className="text-[11px] font-bold text-slate-500 mt-0.5">Currently {formData.is_active ? 'PUBLISHED' : 'HIDDEN'} from students</div>
+                </div>
+              </div>
+              <div className={`
+                w-12 h-6 rounded-full relative transition-all duration-300 border-2
+                ${formData.is_active ? 'bg-indigo-600 border-indigo-600' : 'bg-slate-200 border-slate-200'}
+              `}>
+                <div className={`
+                  absolute top-1 w-3 h-3 rounded-full bg-white transition-all duration-300
+                  ${formData.is_active ? 'left-7' : 'left-1'}
+                `} />
+              </div>
+            </div>
           </div>
         </div>
 
-        <div style={{ marginTop: '40px', paddingTop: '32px', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'flex-end', gap: '16px' }}>
-          <Link href="/admin/lessons" className="btn btn-ghost" style={{ padding: '14px 24px' }}>Cancel</Link>
-          <button type="submit" className="btn btn-primary" style={{ padding: '14px 32px' }} disabled={status === "saving"}>
-            {status === "saving" ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
-            <span>{status === "saving" ? "Updating..." : "Save Changes"}</span>
+        <div className="pt-10 border-t border-slate-100 flex flex-col md:flex-row justify-end gap-4 mt-10">
+          <Link href="/admin/lessons" className="h-16 px-10 flex items-center justify-center text-slate-500 font-bold hover:bg-slate-50 rounded-2xl transition-all">
+            Discard Changes
+          </Link>
+          <button 
+            type="submit" 
+            className="h-16 px-12 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl shadow-xl shadow-indigo-600/20 transition-all flex items-center justify-center gap-3 disabled:opacity-50 group" 
+            disabled={status === "saving"}
+          >
+            {status === "saving" ? (
+              <><Loader2 className="animate-spin" size={22} /> Updating...</>
+            ) : (
+              <><Save size={22} /> <span>Save Lesson Path</span> <ChevronRight className="group-hover:translate-x-1 transition-transform" size={22} /></>
+            )}
           </button>
         </div>
         
         {status === "error" && (
-          <div style={{ marginTop: '24px', padding: '16px', background: 'var(--rose-light)', color: 'var(--rose)', borderRadius: '12px', fontSize: '14px', border: '1px solid rgba(220, 38, 38, 0.2)', display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <AlertCircle size={20} />
-            <span><strong>Error:</strong> Failed to save changes. Please check your connection and try again.</span>
+          <div className="mt-8 p-5 bg-rose-50 border border-rose-100 rounded-2xl text-rose-600 text-sm font-bold flex items-center gap-4 animate-in shake duration-500">
+            <AlertCircle size={22} className="shrink-0" />
+            <span>Failed to save changes. Please verify your data and try again.</span>
           </div>
         )}
       </form>

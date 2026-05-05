@@ -1,7 +1,12 @@
 import axios from 'axios';
 
+const isServer = typeof window === 'undefined';
+const baseURL = isServer 
+  ? (process.env.INTERNAL_API_URL || 'http://nginx/api')
+  : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api');
+
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost/api',
+  baseURL,
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',

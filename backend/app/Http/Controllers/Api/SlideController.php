@@ -57,6 +57,10 @@ class SlideController extends Controller
             $validated['secondary_image'] = $path;
         }
 
+        if (!isset($validated['layout_type'])) {
+            $validated['layout_type'] = 'standard';
+        }
+
         $slide = Slide::create($validated);
 
         return response()->json([
@@ -169,6 +173,40 @@ class SlideController extends Controller
             'success' => true,
             'message' => 'Slide duplicated successfully',
             'data'    => $newSlide,
+        ]);
+    }
+
+    public function import(\Illuminate\Http\Request $request, Slide $slide): JsonResponse
+    {
+        $request->validate([
+            'json_data' => 'required|json',
+        ]);
+
+        $data = json_decode($request->json_data, true);
+
+        $slide->update([
+            'title'          => $data['title'] ?? $slide->title,
+            'type'           => $data['type'] ?? $slide->type,
+            'content'        => $data['content'] ?? $slide->content,
+            'code_snippet'   => $data['code_snippet'] ?? $slide->code_snippet,
+            'code_theme'     => $data['code_theme'] ?? $slide->code_theme,
+            'code_position'  => $data['code_position'] ?? $slide->code_position,
+            'image'          => $data['image'] ?? $slide->image,
+            'secondary_image'=> $data['secondary_image'] ?? $slide->secondary_image,
+            'image_position' => $data['image_position'] ?? $slide->image_position,
+            'image_width'    => $data['image_width'] ?? $slide->image_width,
+            'secondary_image_position' => $data['secondary_image_position'] ?? $slide->secondary_image_position,
+            'secondary_image_width'    => $data['secondary_image_width'] ?? $slide->secondary_image_width,
+            'layout_type'    => $data['layout_type'] ?? $slide->layout_type ?? 'standard',
+            'language'       => $data['language'] ?? $slide->language,
+            'order'          => $data['order'] ?? $slide->order,
+            'notes'          => $data['notes'] ?? $slide->notes,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Slide updated from JSON successfully',
+            'data'    => $slide,
         ]);
     }
 }

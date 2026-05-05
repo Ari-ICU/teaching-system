@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ArrowLeft, UserPlus, Edit2, Trash2, Search, User, Shield, BookOpen, Save, X, Loader2, Mail, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, UserPlus, Edit2, Trash2, Search, User, Shield, BookOpen, Save, X, Loader2, Mail, CheckCircle2, ChevronRight, MoreHorizontal } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import DropdownSelect from "@/components/ui/DropdownSelect";
 import Modal from "@/components/ui/Modal";
@@ -140,7 +140,10 @@ export default function AdminUsersPage() {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      if (res.ok) fetchUsers();
+      if (res.ok) {
+        fetchUsers();
+        setDeleteModal({ isOpen: false, id: null });
+      }
     } catch (error) { console.error(error); }
   };
 
@@ -152,11 +155,16 @@ export default function AdminUsersPage() {
     );
   });
 
-  if (authLoading) return null;
+  if (authLoading || isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <Loader2 className="animate-spin text-indigo-500" size={32} />
+      </div>
+    );
+  }
 
   return (
-    <div className="page">
-      {/* Premium Confirm Modal */}
+    <div className="p-6 md:p-10 lg:p-12 max-w-7xl mx-auto space-y-10">
       <Modal
         isOpen={deleteModal.isOpen}
         onClose={() => setDeleteModal({ isOpen: false, id: null })}
@@ -167,102 +175,170 @@ export default function AdminUsersPage() {
         type="danger"
       />
 
-      <Link href="/admin" className="btn btn-ghost" style={{ marginBottom: '24px' }}>
+      <Link href="/admin" className="inline-flex items-center gap-2 px-4 py-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors font-medium mb-4">
         <ArrowLeft size={16} /> Back to Dashboard
       </Link>
 
-      <header className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
-        <div>
-          <h1 className="page-title">User Management</h1>
-          <p className="page-subtitle">Manage student accounts, roles, and course access.</p>
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="space-y-2">
+          <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">User Management</h1>
+          <p className="text-slate-500 text-lg font-medium">Manage student accounts, roles, and course access.</p>
         </div>
-        <Link href="/admin/users/new" className="btn btn-primary">
-          <UserPlus size={16} /> New User
+        <Link href="/admin/users/new" className="px-6 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-600/20 transition-all flex items-center gap-2">
+          <UserPlus size={18} /> New User
         </Link>
       </header>
 
       {/* Search Bar */}
-      <div className="glass-card" style={{ padding: '20px', marginBottom: '32px', display: 'flex', gap: '16px' }}>
-        <div style={{ position: 'relative', flex: 1 }}>
-          <Search style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} size={18} />
-          <input
-            type="text"
-            placeholder="Search by name or email..."
-            className="url-input"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            style={{ width: '100%', paddingLeft: '48px', background: 'transparent', border: 'none' }}
-          />
-        </div>
+      <div className="bg-white border border-slate-200 rounded-[32px] p-4 shadow-sm relative z-20 group">
+        <Search className="absolute left-9 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" size={20} />
+        <input
+          type="text"
+          placeholder="Search by name or email address..."
+          className="w-full h-14 pl-14 pr-6 bg-slate-50 border-none rounded-2xl text-slate-900 font-bold focus:ring-4 focus:ring-indigo-500/10 transition-all placeholder:text-slate-400"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
       </div>
 
-      <div className="grid-1" style={{ gap: '16px' }}>
-        {filteredUsers.map((u) => (
-          <div key={u.id} className="glass-card animate-fadeInUp" style={{ padding: '24px', display: 'flex', gap: '24px', alignItems: 'center' }}>
-            <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'var(--bg-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <User size={28} color="var(--text-muted)" />
-            </div>
+      <div className="space-y-4">
+        <div className="flex items-center justify-between px-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2">
+           <div className="flex items-center gap-16">
+              <span className="ml-14">User Info</span>
+           </div>
+           <span className="mr-24">Actions</span>
+        </div>
 
-            <div style={{ flex: 1 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
-                <h3 style={{ fontSize: '18px', fontWeight: 800 }}>{u.name}</h3>
-                <span className={`badge badge-${u.role === 'admin' ? 'rose' : u.role === 'teacher' ? 'amber' : 'emerald'}`} style={{ textTransform: 'uppercase', fontSize: '10px' }}>
-                  {u.role}
-                </span>
+        <div className="space-y-3">
+          {filteredUsers.map((u, index) => (
+            <div 
+              key={u.id} 
+              className="group bg-white border border-slate-200 rounded-[28px] p-4 flex items-center gap-6 shadow-sm hover:shadow-xl hover:border-indigo-500/20 transition-all duration-300 animate-in fade-in slide-in-from-bottom-4"
+              style={{ animationDelay: `${index * 50}ms` }}
+            >
+              <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100 shadow-inner group-hover:scale-105 transition-transform duration-500">
+                <User size={24} className="text-slate-300 group-hover:text-indigo-500 transition-colors" />
               </div>
-              <div style={{ display: 'flex', gap: '20px', fontSize: '13px', color: 'var(--text-muted)' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Mail size={14} /> {u.email}</span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Shield size={14} /> Joined {new Date(u.created_at).toLocaleDateString()}</span>
-              </div>
-            </div>
 
-            <div style={{ display: 'flex', gap: '8px' }}>
-              {/* Admins cannot enroll themselves into student courses */}
-              {u.id !== currentUser?.id && (
-                <button onClick={() => handleOpenEnroll(u)} className="btn btn-ghost" title="Manually Enroll">
-                  <BookOpen size={18} color="var(--emerald)" />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-3 mb-1">
+                  <h3 className="text-lg font-bold text-slate-900 tracking-tight truncate group-hover:text-indigo-600 transition-colors">
+                    {u.name}
+                  </h3>
+                  <span className={`
+                    px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider border
+                    ${u.role === 'admin' ? 'bg-rose-50 text-rose-600 border-rose-100' : 
+                      u.role === 'teacher' ? 'bg-amber-50 text-amber-600 border-amber-100' : 
+                      'bg-emerald-50 text-emerald-600 border-emerald-100'}
+                  `}>
+                    {u.role}
+                  </span>
+                </div>
+                <div className="flex items-center gap-6 text-xs font-bold text-slate-400">
+                  <span className="flex items-center gap-1.5 group-hover:text-indigo-400 transition-colors">
+                    <Mail size={14} /> {u.email}
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <Shield size={14} /> Joined {new Date(u.created_at).toLocaleDateString()}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 pr-2">
+                {u.id !== currentUser?.id && (
+                  <button 
+                    onClick={() => handleOpenEnroll(u)} 
+                    className="w-10 h-10 flex items-center justify-center rounded-xl text-emerald-500 hover:bg-emerald-50 transition-all" 
+                    title="Manually Enroll"
+                  >
+                    <BookOpen size={18} />
+                  </button>
+                )}
+                <button 
+                  onClick={() => handleOpenEdit(u)} 
+                  className="w-10 h-10 flex items-center justify-center rounded-xl text-indigo-500 hover:bg-indigo-50 transition-all"
+                  title="Edit User"
+                >
+                  <Edit2 size={18} />
                 </button>
-              )}
-              <button onClick={() => handleOpenEdit(u)} className="btn btn-ghost">
-                <Edit2 size={18} color="var(--indigo)" />
-              </button>
-              <button
-                onClick={() => {
-                  if (u.id === currentUser?.id) return;
-                  setDeleteModal({ isOpen: true, id: u.id });
-                }}
-                className="btn btn-ghost"
-                disabled={u.id === currentUser?.id}
-                style={{ opacity: u.id === currentUser?.id ? 0.2 : 1 }}
-              >
-                <Trash2 size={18} color="var(--rose)" />
-              </button>
+                <button
+                  onClick={() => {
+                    if (u.id === currentUser?.id) return;
+                    setDeleteModal({ isOpen: true, id: u.id });
+                  }}
+                  className={`w-10 h-10 flex items-center justify-center rounded-xl text-rose-500 hover:bg-rose-50 transition-all ${u.id === currentUser?.id ? 'opacity-20 cursor-not-allowed' : ''}`}
+                  disabled={u.id === currentUser?.id}
+                  title="Delete User"
+                >
+                  <Trash2 size={18} />
+                </button>
+                <div className="w-px h-6 bg-slate-100 mx-2 hidden md:block" />
+                <Link 
+                  href="#" 
+                  className="w-10 h-10 flex items-center justify-center rounded-xl text-slate-300 hover:text-slate-600 hover:bg-slate-50 transition-all hidden md:flex"
+                >
+                  <ChevronRight size={20} />
+                </Link>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+
+          {filteredUsers.length === 0 && (
+            <div className="bg-white border border-slate-200 border-dashed rounded-[40px] p-24 text-center space-y-6">
+               <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto text-slate-200">
+                 <Search size={40} />
+               </div>
+               <div className="space-y-2">
+                 <h3 className="text-xl font-bold text-slate-900">No users found</h3>
+                 <p className="text-slate-500 font-medium max-w-xs mx-auto">Try searching for a different name or email to find what you&apos;re looking for.</p>
+               </div>
+               <button 
+                 onClick={() => setSearchTerm("")} 
+                 className="text-indigo-600 font-black text-sm uppercase tracking-widest hover:text-indigo-700"
+               >
+                 Clear search query
+               </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Edit User Modal */}
       {showEditModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}>
-          <div className="glass-card animate-fadeInUp" style={{ maxWidth: '500px', width: '100%', padding: '40px', background: 'white' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px' }}>
-              <h2 style={{ fontSize: '24px', fontWeight: 800 }}>Edit User</h2>
-              <button onClick={() => setShowEditModal(false)} className="btn btn-ghost"><X size={24} /></button>
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-5">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300" onClick={() => setShowEditModal(false)} />
+          <div className="relative bg-white rounded-[32px] shadow-2xl w-full max-w-[500px] p-10 overflow-hidden animate-in fade-in zoom-in-95 slide-in-from-bottom-4 duration-300">
+            <div className="flex justify-between items-center mb-8">
+              <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">Edit User</h2>
+              <button onClick={() => setShowEditModal(false)} className="p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-50 transition-all">
+                <X size={24} />
+              </button>
             </div>
 
-            <form onSubmit={handleUpdateUser} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>Full Name</label>
-                <input type="text" className="url-input" required value={editFormData.name} onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })} style={{ width: '100%' }} />
+            <form onSubmit={handleUpdateUser} className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-900 block ml-1">Full Name</label>
+                <input 
+                  type="text" 
+                  className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all text-slate-900 font-bold" 
+                  required 
+                  value={editFormData.name} 
+                  onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })} 
+                />
               </div>
-              <div>
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>Email Address</label>
-                <input type="email" className="url-input" required value={editFormData.email} onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })} style={{ width: '100%' }} />
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-900 block ml-1">Email Address</label>
+                <input 
+                  type="email" 
+                  className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all text-slate-900 font-bold" 
+                  required 
+                  value={editFormData.email} 
+                  onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })} 
+                />
               </div>
               {currentUser?.role === 'admin' && (
-                <div>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>System Role</label>
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-900 block ml-1">System Role</label>
                   <DropdownSelect
                     options={[
                       { value: "student", label: "Student" },
@@ -274,12 +350,22 @@ export default function AdminUsersPage() {
                   />
                 </div>
               )}
-              <div>
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>New Password (leave blank to keep current)</label>
-                <input type="password" className="url-input" value={editFormData.password} onChange={(e) => setEditFormData({ ...editFormData, password: e.target.value })} style={{ width: '100%' }} />
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-900 block ml-1">New Password</label>
+                <input 
+                  type="password" 
+                  placeholder="Leave blank to keep current"
+                  className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all text-slate-900 font-bold" 
+                  value={editFormData.password} 
+                  onChange={(e) => setEditFormData({ ...editFormData, password: e.target.value })} 
+                />
               </div>
-              <button type="submit" className="btn btn-primary" style={{ width: '100%', height: '52px' }} disabled={isSaving}>
-                {isSaving ? <Loader2 className="animate-spin" /> : <><Save size={18} /> Update User Details</>}
+              <button 
+                type="submit" 
+                className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl shadow-lg shadow-indigo-600/20 transition-all disabled:opacity-50 flex items-center justify-center gap-2" 
+                disabled={isSaving}
+              >
+                {isSaving ? <Loader2 className="animate-spin" size={20} /> : <><Save size={18} /> Update User Details</>}
               </button>
             </form>
           </div>
@@ -288,27 +374,32 @@ export default function AdminUsersPage() {
 
       {/* Manual Enroll Modal */}
       {showEnrollModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}>
-          <div className="glass-card animate-fadeInUp" style={{ maxWidth: '450px', width: '100%', padding: '40px', background: 'white' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px' }}>
-              <h2 style={{ fontSize: '24px', fontWeight: 800 }}>Manual Enrollment</h2>
-              <button onClick={() => setShowEnrollModal(false)} className="btn btn-ghost"><X size={24} /></button>
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-5">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300" onClick={() => setShowEnrollModal(false)} />
+          <div className="relative bg-white rounded-[32px] shadow-2xl w-full max-w-[450px] p-10 overflow-hidden animate-in fade-in zoom-in-95 slide-in-from-bottom-4 duration-300">
+            <div className="flex justify-between items-center mb-8">
+              <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">Manual Enrollment</h2>
+              <button onClick={() => setShowEnrollModal(false)} className="p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-50 transition-all">
+                <X size={24} />
+              </button>
             </div>
 
-            <div style={{ marginBottom: '24px' }}>
-              <p style={{ color: 'var(--text-secondary)', marginBottom: '12px' }}>
-                Select a course to instantly enroll <strong>{selectedUser?.name}</strong> with Active status.
+            <div className="space-y-6 mb-8">
+              <p className="text-slate-500 font-medium">
+                Select a course to instantly enroll <strong className="text-indigo-600">{selectedUser?.name}</strong> with active status.
               </p>
 
               {selectedUser?.courses && selectedUser.courses.length > 0 && (
-                <div style={{ padding: '16px', background: 'var(--bg-secondary)', borderRadius: '12px', border: '1px solid var(--border)' }}>
-                  <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '8px', textTransform: 'uppercase' }}>Current Enrollments</div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5">
+                  <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Current Enrollments</div>
+                  <div className="space-y-3">
                     {selectedUser.courses.map((c: any) => (
-                      <div key={c.id} style={{ fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-primary)' }}>
-                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: c.pivot?.status === 'active' ? 'var(--emerald)' : 'var(--amber)' }}></div>
-                        <span style={{ fontWeight: 600 }}>{c.title}</span>
-                        <span style={{ fontSize: '10px', opacity: 0.7 }}>({c.pivot?.status})</span>
+                      <div key={c.id} className="flex items-center justify-between group/item">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-2 h-2 rounded-full ${c.pivot?.status === 'active' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-amber-500'}`} />
+                          <span className="text-sm font-bold text-slate-700">{c.title}</span>
+                        </div>
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">{c.pivot?.status}</span>
                       </div>
                     ))}
                   </div>
@@ -316,9 +407,9 @@ export default function AdminUsersPage() {
               )}
             </div>
 
-            <form onSubmit={handleManualEnroll} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: 700, marginBottom: '8px' }}>Select Course Path</label>
+            <form onSubmit={handleManualEnroll} className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-900 block ml-1">Select Course Path</label>
                 {courses.filter(c => !selectedUser?.courses?.some((sc: any) => sc.id === c.id)).length > 0 ? (
                   <DropdownSelect
                     options={courses
@@ -329,18 +420,17 @@ export default function AdminUsersPage() {
                     onChange={(value) => setEnrollCourseId(value)}
                   />
                 ) : (
-                  <div style={{ padding: '12px', background: 'var(--bg-secondary)', borderRadius: '8px', fontSize: '13px', color: 'var(--text-muted)', border: '1px dashed var(--border)' }}>
-                    No additional courses available for this student.
+                  <div className="bg-slate-50 border border-slate-200 border-dashed rounded-xl p-4 text-center text-sm font-bold text-slate-400">
+                    No additional courses available.
                   </div>
                 )}
               </div>
               <button
                 type="submit"
-                className="btn btn-primary"
-                style={{ width: '100%', height: '52px', background: 'var(--emerald)', borderColor: 'var(--emerald)' }}
+                className="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-2xl shadow-lg shadow-emerald-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                 disabled={isSaving || courses.filter(c => !selectedUser?.courses?.some((sc: any) => sc.id === c.id)).length === 0}
               >
-                {isSaving ? <Loader2 className="animate-spin" /> : <><CheckCircle2 size={18} /> Grant Instant Access</>}
+                {isSaving ? <Loader2 className="animate-spin" size={20} /> : <><CheckCircle2 size={20} /> Grant Instant Access</>}
               </button>
             </form>
           </div>

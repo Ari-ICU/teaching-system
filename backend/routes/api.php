@@ -59,11 +59,13 @@ Route::middleware(['auth:api', 'role:admin,teacher'])->group(function () {
     Route::post('/lessons/reorder', [LessonController::class, 'reorder']);
     Route::get('admin/lessons', [LessonController::class, 'adminIndex']);
     Route::post('/lessons/{lesson}/duplicate', [LessonController::class, 'duplicate']);
+    Route::post('/lessons/{lesson}/import', [LessonController::class, 'import']);
     Route::apiResource('lessons', LessonController::class)->except(['index', 'show']);
     
     // Slides reorder
     Route::post('/slides/reorder', [SlideController::class, 'reorder']);
     Route::post('/slides/{slide}/duplicate', [SlideController::class, 'duplicate']);
+    Route::post('/slides/{slide}/import', [SlideController::class, 'import']);
     Route::apiResource('slides', SlideController::class)->except(['index', 'show', 'byLesson']);
 
     // Code Examples

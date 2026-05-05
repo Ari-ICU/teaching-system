@@ -40,22 +40,30 @@ export default async function AdminLessonSlidesPage({ params }: { params: Promis
   const { lesson, slides } = data;
 
   return (
-    <div className="page">
-      <Link href="/admin/slides" className="btn btn-ghost" style={{ marginBottom: '24px' }}>
+    <div className="p-6 md:p-8 lg:p-12 max-w-[1600px] mx-auto">
+      <Link 
+        href="/admin/slides" 
+        className="inline-flex items-center gap-2 px-4 py-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors mb-8 font-medium"
+      >
         <ArrowLeft size={16} /> Back to Lessons
       </Link>
 
-      <header className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+      <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
         <div>
-          <h1 className="page-title">Slides: {lesson.title}</h1>
-          <p className="page-subtitle">Manage slides for this specific lesson.</p>
+          <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight mb-2">Slides: {lesson.title}</h1>
+          <p className="text-slate-500 text-lg font-medium">Manage slides for this specific lesson.</p>
         </div>
-        <Link href={`/admin/slides/${lesson.id}/new`} className="btn btn-primary">
-          <Plus size={16} /> New Slide
+        <Link 
+          href={`/admin/slides/${lesson.id}/new`} 
+          className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white font-bold rounded-2xl hover:bg-indigo-700 hover:-translate-y-0.5 transition-all shadow-lg shadow-indigo-600/20"
+        >
+          <Plus size={18} /> New Slide
         </Link>
       </header>
 
-      <SlideTable initialSlides={slides} lessonId={lessonId} />
+      <div className="bg-white border border-slate-200 rounded-[32px] overflow-hidden shadow-sm">
+        <SlideTable initialSlides={slides} lessonId={lessonId} />
+      </div>
     </div>
   );
 }

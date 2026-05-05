@@ -36,8 +36,7 @@ export default function DeleteLessonButton({ id }: Props) {
     <button 
       onClick={handleDelete}
       disabled={isDeleting}
-      className="btn btn-ghost" 
-      style={{ padding: '6px', minWidth: 'auto', color: 'var(--rose)', opacity: isDeleting ? 0.5 : 1 }}
+      className={`p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-all border-none bg-transparent cursor-pointer ${isDeleting ? 'opacity-50' : 'opacity-100'}`}
     >
       <Trash2 size={14} />
     </button>

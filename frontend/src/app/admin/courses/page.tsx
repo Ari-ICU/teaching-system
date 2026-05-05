@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ArrowLeft, Plus, Edit2, Trash2, Layout, BookOpen, Layers, Loader2 } from "lucide-react";
+import { ArrowLeft, Plus, Edit2, Trash2, Layout, BookOpen, Layers, Loader2, ChevronRight, GraduationCap } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import Modal from "@/components/ui/Modal";
 
@@ -43,82 +43,130 @@ export default function AdminCoursesPage() {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      if (res.ok) fetchCourses();
+      if (res.ok) {
+        fetchCourses();
+        setDeleteModal({ isOpen: false, id: null });
+      }
     } catch (error) {
       console.error(error);
     }
   };
 
-  if (authLoading) return null;
+  if (authLoading || isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <Loader2 className="animate-spin text-indigo-500" size={32} />
+      </div>
+    );
+  }
 
   return (
-    <div className="page">
-      {/* Premium Confirm Modal */}
+    <div className="p-6 md:p-10 lg:p-12 max-w-7xl mx-auto space-y-10">
       <Modal 
         isOpen={deleteModal.isOpen}
         onClose={() => setDeleteModal({ isOpen: false, id: null })}
         onConfirm={() => deleteModal.id && handleDelete(deleteModal.id)}
         title="Delete Course?"
-        message="This action is permanent and will delete all modules, lessons, and content associated with this course."
-        confirmText="Delete Path"
+        message="This action is permanent and will delete all modules, lessons, and content associated with this course. This cannot be undone."
+        confirmText="Delete Curriculum Path"
         type="danger"
       />
 
-      <Link href="/admin" className="btn btn-ghost" style={{ marginBottom: '24px' }}>
+      <Link href="/admin" className="inline-flex items-center gap-2 px-4 py-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors font-medium mb-4">
         <ArrowLeft size={16} /> Back to Dashboard
       </Link>
 
-      <header className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
-        <div>
-          <h1 className="page-title">Manage Courses</h1>
-          <p className="page-subtitle">Create and organize your high-level learning paths.</p>
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="space-y-2">
+          <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">Manage Courses</h1>
+          <p className="text-slate-500 text-lg font-medium">Create and organize your high-level learning paths.</p>
         </div>
-        <Link href="/admin/courses/new" className="btn btn-primary">
-          <Plus size={16} /> New Course
+        <Link href="/admin/courses/new" className="px-6 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-600/20 transition-all flex items-center gap-2">
+          <Plus size={18} /> New Course
         </Link>
       </header>
 
       {/* Course List */}
-      <div className="grid-1" style={{ gap: '20px' }}>
-        {courses.map((course) => (
-          <div key={course.id} className="glass-card" style={{ padding: '24px', display: 'flex', gap: '24px', alignItems: 'center' }}>
-            <div style={{ width: '64px', height: '64px', borderRadius: '16px', background: 'var(--indigo-light)15', color: 'var(--indigo)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+      <div className="space-y-4">
+        {courses.map((course, index) => (
+          <div 
+            key={course.id} 
+            className="group bg-white border border-slate-200 rounded-[32px] p-6 flex flex-col md:flex-row items-center gap-8 shadow-sm hover:shadow-xl hover:border-indigo-500/20 transition-all duration-300 animate-in fade-in slide-in-from-bottom-4"
+            style={{ animationDelay: `${index * 100}ms` }}
+          >
+            <div className="w-24 h-24 rounded-[24px] bg-indigo-50 flex items-center justify-center shrink-0 overflow-hidden shadow-inner group-hover:scale-105 transition-transform duration-500 border border-slate-100">
                {course.image ? (
                  <img 
                    src={course.image.startsWith('http') ? course.image : `${process.env.NEXT_PUBLIC_STORAGE_URL || 'http://localhost:8080/storage'}/${course.image}`} 
                    alt={course.title} 
-                   style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                   className="w-full h-full object-cover"
                  />
                ) : (
-                 <Layout size={32} />
+                 <GraduationCap size={40} className="text-indigo-400" />
                )}
             </div>
             
-            <div style={{ flex: 1 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
-                <h3 style={{ fontSize: '20px', fontWeight: 800 }}>{course.title}</h3>
-                <span className="badge badge-indigo">${course.price || '0.00'}</span>
+            <div className="flex-1 min-w-0 space-y-3 text-center md:text-left">
+              <div className="flex flex-col md:flex-row items-center gap-3">
+                <h3 className="text-2xl font-black text-slate-900 tracking-tight group-hover:text-indigo-600 transition-colors">{course.title}</h3>
+                <span className="px-3 py-1 bg-indigo-50 text-indigo-600 text-xs font-black rounded-full border border-indigo-100 uppercase tracking-wider">
+                  ${course.price || '0.00'}
+                </span>
               </div>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>{course.description || "No description provided."}</p>
+              <p className="text-slate-500 text-base font-medium line-clamp-1">{course.description || "Master this technology from scratch with our professional, hands-on curriculum."}</p>
               
-              <div style={{ display: 'flex', gap: '20px', marginTop: '12px', fontSize: '13px', color: 'var(--text-muted)' }}>
-                 <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Layers size={14} /> {course.modules_count || 0} Modules</span>
-                 <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><BookOpen size={14} /> Path: /{course.slug}</span>
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-6 text-xs font-black uppercase tracking-widest text-slate-400">
+                 <span className="flex items-center gap-1.5 group-hover:text-indigo-400 transition-colors">
+                   <Layers size={16} /> {course.modules_count || 0} Modules
+                 </span>
+                 <span className="flex items-center gap-1.5">
+                   <BookOpen size={16} /> /{course.slug}
+                 </span>
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <Link href={`/admin/courses/${course.id}/edit`} className="btn btn-ghost" style={{ padding: '10px' }}>
-                <Edit2 size={18} color="#1a5c2a" />
+            <div className="flex items-center gap-3 shrink-0">
+              <Link 
+                href={`/admin/courses/${course.id}/edit`} 
+                className="w-12 h-12 flex items-center justify-center rounded-2xl bg-slate-50 text-indigo-600 hover:bg-indigo-50 transition-all border border-slate-100"
+                title="Edit Course"
+              >
+                <Edit2 size={20} />
               </Link>
               {user?.role === 'admin' && (
-                <button onClick={() => setDeleteModal({ isOpen: true, id: course.id })} className="btn btn-ghost" style={{ padding: '10px' }}>
-                  <Trash2 size={18} color="var(--rose)" />
+                <button 
+                  onClick={() => setDeleteModal({ isOpen: true, id: course.id })} 
+                  className="w-12 h-12 flex items-center justify-center rounded-2xl bg-slate-50 text-rose-500 hover:bg-rose-50 transition-all border border-slate-100"
+                  title="Delete Course"
+                >
+                  <Trash2 size={20} />
                 </button>
               )}
+              <div className="w-px h-10 bg-slate-100 mx-2 hidden md:block" />
+              <Link 
+                href={`/admin/courses/${course.id}/edit`}
+                className="w-12 h-12 flex items-center justify-center rounded-2xl text-slate-300 hover:text-indigo-600 transition-all hidden md:flex"
+              >
+                <ChevronRight size={24} />
+              </Link>
             </div>
           </div>
         ))}
+
+        {courses.length === 0 && (
+          <div className="bg-white border border-slate-200 border-dashed rounded-[40px] p-24 text-center space-y-6">
+            <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto text-slate-200 shadow-inner">
+              <GraduationCap size={40} />
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-2xl font-black text-slate-900">No courses created yet</h3>
+              <p className="text-slate-500 text-lg font-medium max-w-xs mx-auto">Start by creating your first curriculum path to organize your modules and lessons.</p>
+            </div>
+            <Link href="/admin/courses/new" className="inline-flex items-center justify-center px-10 py-4 bg-indigo-600 text-white font-bold rounded-2xl shadow-lg shadow-indigo-600/20 hover:bg-indigo-700 transition-all">
+              Create First Course
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   );

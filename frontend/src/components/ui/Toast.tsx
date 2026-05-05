@@ -25,105 +25,64 @@ export default function Toast({ show, message, type = 'success', onClose, durati
 
   const themes = {
     success: {
-      color: 'var(--emerald)',
-      bg: 'rgba(16, 185, 129, 0.1)',
-      icon: <CheckCircle size={18} />,
-      border: 'var(--emerald)'
+      colorClass: 'text-emerald-500',
+      bgClass: 'bg-emerald-50',
+      borderClass: 'border-emerald-500/20',
+      shadowClass: 'shadow-[0_10px_25px_rgba(16,185,129,0.15)]',
+      progressClass: 'bg-emerald-500',
+      icon: <CheckCircle size={18} />
     },
     error: {
-      color: 'var(--rose)',
-      bg: 'rgba(244, 63, 94, 0.1)',
-      icon: <AlertCircle size={18} />,
-      border: 'var(--rose)'
+      colorClass: 'text-rose-500',
+      bgClass: 'bg-rose-50',
+      borderClass: 'border-rose-500/20',
+      shadowClass: 'shadow-[0_10px_25px_rgba(244,63,94,0.15)]',
+      progressClass: 'bg-rose-500',
+      icon: <AlertCircle size={18} />
     },
     info: {
-      color: 'var(--indigo)',
-      bg: 'rgba(99, 102, 241, 0.1)',
-      icon: <Info size={18} />,
-      border: 'var(--indigo)'
+      colorClass: 'text-indigo-500',
+      bgClass: 'bg-indigo-50',
+      borderClass: 'border-indigo-500/20',
+      shadowClass: 'shadow-[0_10px_25px_rgba(99,102,241,0.15)]',
+      progressClass: 'bg-indigo-500',
+      icon: <Info size={18} />
     }
   };
 
   const theme = themes[type];
 
   return (
-    <div style={{
-      position: 'fixed',
-      top: '24px',
-      left: '50%',
-      transform: 'translateX(-50%)',
-      zIndex: 10000,
-      animation: 'toastSlideDown 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28)'
-    }}>
-      <div className="glass-card" style={{
-        background: 'white',
-        border: `1px solid ${theme.border}40`,
-        padding: '12px 24px',
-        borderRadius: '100px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '12px',
-        boxShadow: `0 10px 25px ${theme.color}15`,
-        minWidth: '320px'
-      }}>
-        <div style={{
-          width: '28px',
-          height: '28px',
-          borderRadius: '50%',
-          background: theme.bg,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: theme.color
-        }}>
+    <div 
+      className="fixed top-6 left-1/2 -translate-x-1/2 z-[10000] animate-in fade-in slide-in-from-top-4 duration-300 ease-out"
+    >
+      <div className={`
+        bg-white border p-3 px-6 rounded-full flex items-center gap-3 min-w-[320px] relative overflow-hidden shadow-xl
+        ${theme.borderClass} ${theme.shadowClass}
+      `}>
+        <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${theme.bgClass} ${theme.colorClass}`}>
           {theme.icon}
         </div>
         
-        <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', flex: 1 }}>{message}</span>
+        <span className="text-sm font-bold text-slate-900 flex-1">{message}</span>
         
         <button 
           onClick={onClose}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: 'var(--text-muted)',
-            cursor: 'pointer',
-            padding: '4px',
-            display: 'flex',
-            alignItems: 'center'
-          }}
+          className="p-1 text-slate-400 hover:text-slate-600 transition-colors border-none bg-transparent cursor-pointer"
         >
           <X size={16} />
         </button>
 
-        <div style={{
-          position: 'absolute',
-          bottom: '0',
-          left: '20px',
-          right: '20px',
-          height: '2px',
-          background: `${theme.color}20`,
-          borderRadius: '1px',
-          overflow: 'hidden'
-        }}>
-          <div style={{
-            height: '100%',
-            background: theme.color,
-            animation: `toastProgress ${duration}ms linear forwards`
-          }} />
+        {/* Progress Bar */}
+        <div className="absolute bottom-0 left-5 right-5 h-[2px] bg-slate-100 rounded-full overflow-hidden">
+          <div 
+            className={`h-full ${theme.progressClass} origin-left`}
+            style={{ 
+              animation: `toastProgress ${duration}ms linear forwards` 
+            }}
+          />
         </div>
       </div>
-
-      <style jsx>{`
-        @keyframes toastSlideDown {
-          from { opacity: 0; transform: translate(-50%, -20px); }
-          to { opacity: 1; transform: translate(-50%, 0); }
-        }
-        @keyframes toastProgress {
-          from { width: 0%; }
-          to { width: 100%; }
-        }
-      `}</style>
     </div>
   );
 }

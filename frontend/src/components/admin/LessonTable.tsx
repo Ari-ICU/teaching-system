@@ -53,62 +53,70 @@ export default function LessonTable({ initialLessons }: Props) {
   };
 
   return (
-    <div className="glass-card" style={{ marginTop: '32px', overflow: 'hidden' }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-        <thead>
-          <tr style={{ borderBottom: '1px solid var(--border)', backgroundColor: 'var(--bg-secondary)' }}>
-            <th style={{ padding: '16px', fontWeight: 600, fontSize: '14px', color: 'var(--text-secondary)', width: '80px' }}>Order</th>
-            <th style={{ padding: '16px', fontWeight: 600, fontSize: '14px', color: 'var(--text-secondary)' }}>Module</th>
-            <th style={{ padding: '16px', fontWeight: 600, fontSize: '14px', color: 'var(--text-secondary)' }}>Lesson Title</th>
-            <th style={{ padding: '16px', fontWeight: 600, fontSize: '14px', color: 'var(--text-secondary)' }}>Difficulty</th>
-            <th style={{ padding: '16px', fontWeight: 600, fontSize: '14px', color: 'var(--text-secondary)' }}>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {lessons.map((lesson, index) => (
-            <tr key={lesson.id} style={{ borderBottom: '1px solid var(--border)', opacity: isUpdating ? 0.7 : 1 }}>
-              <td style={{ padding: '16px', fontSize: '14px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <button 
-                    onClick={() => handleMove(index, 'up')} 
-                    disabled={index === 0 || isUpdating}
-                    style={{ background: 'none', border: 'none', cursor: index === 0 ? 'default' : 'pointer', color: index === 0 ? '#ccc' : 'var(--text-secondary)' }}
-                  >
-                    <ChevronUp size={16} />
-                  </button>
-                  <button 
-                    onClick={() => handleMove(index, 'down')} 
-                    disabled={index === lessons.length - 1 || isUpdating}
-                    style={{ background: 'none', border: 'none', cursor: index === lessons.length - 1 ? 'default' : 'pointer', color: index === lessons.length - 1 ? '#ccc' : 'var(--text-secondary)' }}
-                  >
-                    <ChevronDown size={16} />
-                  </button>
-                </div>
-              </td>
-              <td style={{ padding: '16px', fontSize: '14px' }}>{lesson.module?.title || `Module ${lesson.module_id}`}</td>
-              <td style={{ padding: '16px', fontSize: '14px', fontWeight: 500 }}>{lesson.title}</td>
-              <td style={{ padding: '16px', fontSize: '14px' }}>
-                  <span className={`badge badge-${lesson.difficulty === 'beginner' ? 'emerald' : lesson.difficulty === 'intermediate' ? 'amber' : 'rose'}`}>
-                      {lesson.difficulty}
+    <div className="mt-8 bg-white/60 backdrop-blur-xl border border-slate-200 rounded-[24px] shadow-[0_20px_50px_-12px_rgba(0,0,0,0.05)] overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="w-full text-left border-collapse">
+          <thead>
+            <tr className="border-b border-slate-200 bg-slate-50/50">
+              <th className="px-6 py-4 text-[13px] font-bold text-slate-500 uppercase tracking-wider w-20">Order</th>
+              <th className="px-6 py-4 text-[13px] font-bold text-slate-500 uppercase tracking-wider">Module</th>
+              <th className="px-6 py-4 text-[13px] font-bold text-slate-500 uppercase tracking-wider">Lesson Title</th>
+              <th className="px-6 py-4 text-[13px] font-bold text-slate-500 uppercase tracking-wider">Difficulty</th>
+              <th className="px-6 py-4 text-[13px] font-bold text-slate-500 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {lessons.map((lesson, index) => (
+              <tr key={lesson.id} className={`transition-opacity duration-200 ${isUpdating ? 'opacity-50' : 'opacity-100'}`}>
+                <td className="px-6 py-4">
+                  <div className="flex items-center gap-1">
+                    <button 
+                      onClick={() => handleMove(index, 'up')} 
+                      disabled={index === 0 || isUpdating}
+                      className={`p-1 rounded-md transition-colors ${index === 0 ? 'text-slate-300 cursor-default' : 'text-slate-500 hover:bg-slate-100 hover:text-indigo-600 cursor-pointer'} bg-transparent border-none`}
+                    >
+                      <ChevronUp size={16} />
+                    </button>
+                    <button 
+                      onClick={() => handleMove(index, 'down')} 
+                      disabled={index === lessons.length - 1 || isUpdating}
+                      className={`p-1 rounded-md transition-colors ${index === lessons.length - 1 ? 'text-slate-300 cursor-default' : 'text-slate-500 hover:bg-slate-100 hover:text-indigo-600 cursor-pointer'} bg-transparent border-none`}
+                    >
+                      <ChevronDown size={16} />
+                    </button>
+                  </div>
+                </td>
+                <td className="px-6 py-4 text-sm text-slate-600 font-medium">{lesson.module?.title || `Module ${lesson.module_id}`}</td>
+                <td className="px-6 py-4 text-sm text-slate-900 font-bold">{lesson.title}</td>
+                <td className="px-6 py-4">
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wide
+                    ${lesson.difficulty === 'beginner' ? 'bg-emerald-100 text-emerald-700' : 
+                      lesson.difficulty === 'intermediate' ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700'}
+                  `}>
+                    {lesson.difficulty}
                   </span>
-              </td>
-              <td style={{ padding: '16px' }}>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <Link href={`/admin/lessons/${lesson.id}/edit`} className="btn btn-ghost" style={{ padding: '6px', minWidth: 'auto' }}>
-                    <Edit size={14} />
-                  </Link>
-                  <DeleteLessonButton id={lesson.id} />
-                </div>
-              </td>
-            </tr>
-          ))}
-          {lessons.length === 0 && (
-            <tr>
-              <td colSpan={5} style={{ padding: '32px', textAlign: 'center', color: 'var(--text-muted)' }}>No lessons found.</td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+                </td>
+                <td className="px-6 py-4">
+                  <div className="flex items-center gap-2">
+                    <Link 
+                      href={`/admin/lessons/${lesson.id}/edit`} 
+                      className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
+                    >
+                      <Edit size={16} />
+                    </Link>
+                    <DeleteLessonButton id={lesson.id} />
+                  </div>
+                </td>
+              </tr>
+            ))}
+            {lessons.length === 0 && (
+              <tr>
+                <td colSpan={5} className="px-6 py-12 text-center text-sm text-slate-400 italic font-medium">No lessons found.</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

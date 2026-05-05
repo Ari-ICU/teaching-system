@@ -2,10 +2,13 @@
 
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
-import { ArrowLeft, Save, Loader2, AlertCircle, BookOpen } from "lucide-react";
+import { ArrowLeft, Save, Loader2, AlertCircle, BookOpen, Terminal, Sparkles, ChevronRight, Zap } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import DropdownSelect from "@/components/ui/DropdownSelect";
+import Toast from "@/components/ui/Toast";
+import Editor from "@monaco-editor/react";
+import RichTextEditor from "@/components/admin/RichTextEditor";
 
 export default function EditExercisePage({ params }: { params: Promise<{ id: string, exerciseId: string }> }) {
   const { id: lessonId, exerciseId } = use(params);
@@ -24,6 +27,7 @@ export default function EditExercisePage({ params }: { params: Promise<{ id: str
   });
 
   const [status, setStatus] = useState<"loading" | "idle" | "saving" | "error" | "not_found">("loading");
+  const [showToast, setShowToast] = useState(false);
 
   useEffect(() => {
     if (!authLoading && token) {
@@ -47,12 +51,8 @@ export default function EditExercisePage({ params }: { params: Promise<{ id: str
         return;
       }
 
-      // Since solutions are hidden for students, we need a special endpoint or just use the admin one if implemented.
-      // For now, we assume the teacher can see the solution via the API if authorized.
       const data = await res.json();
       
-      // Note: We might need to fetch the solution specifically if it's hidden by model.
-      // Let's try to fetch solution from the /solution endpoint too if needed.
       const solRes = await fetch(`${apiUrl}/exercise/${exerciseId}/solution`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -77,7 +77,20 @@ export default function EditExercisePage({ params }: { params: Promise<{ id: str
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Manual validation for custom editors
+    if (!formData.question || formData.question === "<p><br></p>") {
+      alert("Please provide the problem description.");
+      return;
+    }
+
     setStatus("saving");
+    
+    // The backend requires a solution, so we provide a placeholder if it's empty
+    const finalData = {
+      ...formData,
+      solution: formData.solution || "// Solution not provided"
+    };
     
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost/api';
@@ -88,145 +101,162 @@ export default function EditExercisePage({ params }: { params: Promise<{ id: str
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(finalData),
       });
 
       if (!res.ok) throw new Error("Failed to update exercise");
 
-      alert("Exercise updated successfully!");
-      router.push(`/admin/lessons/${lessonId}/slides`);
-      router.refresh();
+      setShowToast(true);
+      setTimeout(() => {
+        router.push(`/admin/lessons/${lessonId}/slides`);
+        router.refresh();
+      }, 1000);
     } catch (error) {
       console.error(error);
       setStatus("error");
     }
   };
 
-  if (authLoading) return null;
+  if (authLoading || status === "loading") {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 space-y-6">
+        <div className="w-20 h-20 bg-white rounded-[32px] shadow-xl flex items-center justify-center border border-slate-100">
+          <Loader2 className="animate-spin text-indigo-500" size={32} />
+        </div>
+        <div className="text-center space-y-1">
+          <p className="text-slate-900 font-black text-lg">Calibrating Challenge Studio</p>
+          <p className="text-slate-400 font-medium">Synchronizing exercise data...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="page" style={{ maxWidth: '850px', margin: '0 auto' }}>
-      <Link href={`/admin/lessons/${lessonId}/slides`} className="btn btn-ghost" style={{ marginBottom: '24px' }}>
-        <ArrowLeft size={16} /> Back to Content Manager
-      </Link>
-
-      <header className="page-header" style={{ marginBottom: '40px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-           <BookOpen size={24} color="var(--indigo)" />
-           <span className="badge badge-indigo">EDIT CHALLENGE</span>
-        </div>
-        <h1 className="page-title" style={{ fontSize: '32px' }}>Edit Exercise</h1>
-        <p className="page-subtitle">Update the challenge details, solutions, and hints for this exercise.</p>
-      </header>
-
-      <form className="glass-card" style={{ padding: '40px', background: 'white' }} onSubmit={handleSubmit}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
-          
-          <div>
-            <label style={{ display: 'block', marginBottom: '10px', fontSize: '14px', fontWeight: 700 }}>Exercise Title</label>
-            <input 
-              type="text" 
-              required
-              className="url-input" 
-              placeholder="e.g. Reverse a String"
-              style={{ width: '100%', padding: '14px' }}
-              value={formData.title}
-              onChange={(e) => setFormData({...formData, title: e.target.value})}
-            />
+    <div className="min-h-screen bg-slate-50 flex flex-col">
+      <Toast show={showToast} message="Challenge updated successfully!" onClose={() => setShowToast(false)} />
+      
+      {/* Header Navigation */}
+      <nav className="h-20 bg-white border-b border-slate-200 px-6 flex items-center justify-between sticky top-0 z-50 shadow-sm">
+        <div className="flex items-center gap-6">
+          <Link href={`/admin/lessons/${lessonId}/slides`} className="flex items-center gap-2 text-slate-500 hover:text-slate-900 font-bold text-sm transition-colors group">
+            <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" /> <span>Back to Curriculum</span>
+          </Link>
+          <div className="h-6 w-px bg-slate-200" />
+          <div className="flex items-center gap-2">
+            <BookOpen className="text-indigo-500" size={18} />
+            <span className="text-xs font-black uppercase tracking-widest text-slate-400">Edit Mode</span>
           </div>
-
-          <div className="grid-2">
-            <div>
-              <label style={{ display: 'block', marginBottom: '10px', fontSize: '14px', fontWeight: 700 }}>Difficulty Level</label>
-              <DropdownSelect 
-                options={[
-                  { value: "beginner", label: "Beginner" },
-                  { value: "intermediate", label: "Intermediate" },
-                  { value: "advanced", label: "Advanced" }
-                ]}
-                value={formData.difficulty}
-                onChange={(value) => setFormData({...formData, difficulty: value})}
-              />
-            </div>
-            <div>
-              <label style={{ display: 'block', marginBottom: '10px', fontSize: '14px', fontWeight: 700 }}>Programming Language</label>
-              <DropdownSelect 
-                options={[
-                  { value: "javascript", label: "JavaScript" },
-                  { value: "php", label: "PHP" },
-                  { value: "sql", label: "SQL" }
-                ]}
-                value={formData.language}
-                onChange={(value) => setFormData({...formData, language: value})}
-              />
-            </div>
-          </div>
-
-          <div>
-            <label style={{ display: 'block', marginBottom: '10px', fontSize: '14px', fontWeight: 700 }}>Instructions (Question)</label>
-            <textarea 
-              required
-              className="url-input" 
-              placeholder="Describe the problem students need to solve..."
-              style={{ width: '100%', minHeight: '120px', resize: 'vertical', padding: '16px', lineHeight: '1.6' }}
-              value={formData.question}
-              onChange={(e) => setFormData({...formData, question: e.target.value})}
-            />
-          </div>
-
-          <div className="grid-2" style={{ gap: '24px', alignItems: 'start' }}>
-            <div>
-              <label style={{ display: 'block', marginBottom: '10px', fontSize: '14px', fontWeight: 700 }}>Starter Code</label>
-              <textarea 
-                className="url-input" 
-                placeholder="// Initial code for student..."
-                style={{ width: '100%', minHeight: '200px', resize: 'vertical', padding: '16px', fontFamily: 'monospace', background: '#1e293b', color: '#f8fafc' }}
-                value={formData.starter_code}
-                onChange={(e) => setFormData({...formData, starter_code: e.target.value})}
-              />
-            </div>
-            <div>
-              <label style={{ display: 'block', marginBottom: '10px', fontSize: '14px', fontWeight: 700 }}>Reference Solution</label>
-              <textarea 
-                required
-                className="url-input" 
-                placeholder="// The correct answer..."
-                style={{ width: '100%', minHeight: '200px', resize: 'vertical', padding: '16px', fontFamily: 'monospace', background: '#1e293b', color: '#f8fafc' }}
-                value={formData.solution}
-                onChange={(e) => setFormData({...formData, solution: e.target.value})}
-              />
-            </div>
-          </div>
-
-          <div>
-            <label style={{ display: 'block', marginBottom: '10px', fontSize: '14px', fontWeight: 700 }}>Hint (Optional)</label>
-            <input 
-              type="text" 
-              className="url-input" 
-              placeholder="e.g. Try using the .reverse() method"
-              style={{ width: '100%', padding: '14px' }}
-              value={formData.hint}
-              onChange={(e) => setFormData({...formData, hint: e.target.value})}
-            />
-          </div>
-
         </div>
 
-        <div style={{ marginTop: '40px', paddingTop: '32px', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'flex-end', gap: '16px' }}>
-          <Link href={`/admin/lessons/${lessonId}/slides`} className="btn btn-ghost" style={{ padding: '14px 24px' }}>Cancel</Link>
-          <button type="submit" className="btn btn-primary" style={{ padding: '14px 32px' }} disabled={status === "saving"}>
-            {status === "saving" ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
-            <span>{status === "saving" ? "Saving..." : "Save Changes"}</span>
-          </button>
-        </div>
+        <button 
+          type="submit"
+          form="exercise-form"
+          className="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-xl shadow-indigo-600/20 transition-all flex items-center gap-2 disabled:opacity-50 group" 
+          disabled={status === "saving"}
+        >
+          {status === "saving" ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+          <span>Save Changes</span>
+        </button>
+      </nav>
+
+      <main className="flex-1 max-w-4xl mx-auto w-full p-8 md:p-12 lg:p-16 space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
         
-        {status === "error" && (
-          <div style={{ marginTop: '24px', padding: '16px', background: 'var(--rose-light)', color: 'var(--rose)', borderRadius: '12px', fontSize: '14px', border: '1px solid rgba(220, 38, 38, 0.2)', display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <AlertCircle size={20} />
-            <span><strong>Error:</strong> Failed to save changes. Please try again.</span>
+        {/* Title Section */}
+        <header className="space-y-4">
+          <div className="flex items-center gap-3">
+             <div className="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 border border-indigo-100 shadow-sm">
+                <Terminal size={24} />
+             </div>
+             <div>
+                <h1 className="text-3xl font-black text-slate-900 tracking-tight">Modify Challenge</h1>
+                <p className="text-slate-500 font-medium">Refine the problem statements and improve student experience.</p>
+             </div>
           </div>
-        )}
-      </form>
+        </header>
+
+        <form id="exercise-form" onSubmit={handleSubmit} className="space-y-8">
+          
+          {/* Fundamentals Card */}
+          <section className="bg-white rounded-[40px] p-10 shadow-sm border border-slate-200/60 space-y-8 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50/50 rounded-full blur-3xl -mr-16 -mt-16 transition-colors" />
+            
+            <div className="space-y-2 relative z-10">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Challenge Identity</label>
+              <input 
+                type="text" 
+                required
+                className="w-full bg-transparent border-none p-0 text-3xl font-extrabold text-slate-900 placeholder:text-slate-200 focus:ring-0 outline-none tracking-tight" 
+                placeholder="Name your challenge..."
+                value={formData.title}
+                onChange={(e) => setFormData({...formData, title: e.target.value})}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
+              <div className="space-y-3">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Complexity</label>
+                <DropdownSelect 
+                  options={[
+                    { value: "beginner", label: "Beginner Friendly" },
+                    { value: "intermediate", label: "Intermediate Level" },
+                    { value: "advanced", label: "Advanced Mastery" }
+                  ]}
+                  value={formData.difficulty}
+                  onChange={(value) => setFormData({...formData, difficulty: value})}
+                />
+              </div>
+              <div className="space-y-3">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Runtime Environment</label>
+                <DropdownSelect 
+                  options={[
+                    { value: "javascript", label: "JavaScript Engine" },
+                    { value: "php", label: "PHP Runtime" },
+                    { value: "sql", label: "SQL Database" },
+                    { value: "html", label: "HTML/CSS Browser" }
+                  ]}
+                  value={formData.language}
+                  onChange={(value) => setFormData({...formData, language: value})}
+                />
+              </div>
+            </div>
+          </section>
+
+          {/* Instructions Card */}
+          <section className="bg-white rounded-[40px] p-10 shadow-sm border border-slate-200/60 space-y-6">
+            <div className="flex items-center justify-between mb-4">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">The Problem</label>
+              <Sparkles className="text-indigo-400" size={18} />
+            </div>
+            <div className="border border-slate-200 rounded-3xl overflow-hidden">
+              <RichTextEditor 
+                value={formData.question}
+                onChange={(value) => setFormData({...formData, question: value})}
+                placeholder="Describe the problem students need to solve. Be specific about constraints and expected outcomes..."
+                minHeight={200}
+              />
+            </div>
+          </section>
+
+
+
+
+
+          {status === "error" && (
+            <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl flex items-center gap-3 text-rose-600 animate-in shake duration-500">
+              <AlertCircle size={20} />
+              <p className="text-sm font-bold uppercase tracking-widest">Failed to update the challenge. Please try again.</p>
+            </div>
+          )}
+
+          <div className="flex items-center justify-center pt-8">
+            <div className="flex items-center gap-3 text-slate-300">
+              <Sparkles size={16} />
+              <span className="text-[10px] font-black uppercase tracking-[0.2em]">Synchronized with curriculum</span>
+              <Sparkles size={16} />
+            </div>
+          </div>
+        </form>
+      </main>
     </div>
   );
 }

@@ -19,48 +19,56 @@ export default async function AdminSlidesPage() {
   const lessons = await getLessons();
 
   return (
-    <div className="page">
-      <Link href="/admin" className="btn btn-ghost" style={{ marginBottom: '24px' }}>
+    <div className="p-6 md:p-8 lg:p-12 max-w-[1600px] mx-auto">
+      <Link 
+        href="/admin" 
+        className="inline-flex items-center gap-2 px-4 py-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors mb-8 font-medium"
+      >
         <ArrowLeft size={16} /> Back to Admin
       </Link>
 
-      <header className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-        <div>
-          <h1 className="page-title">Manage Slides</h1>
-          <p className="page-subtitle">Select a lesson to view and edit its slides.</p>
-        </div>
+      <header className="mb-12">
+        <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight mb-2">Manage Slides</h1>
+        <p className="text-slate-500 text-lg font-medium">Select a lesson to view and edit its slides.</p>
       </header>
 
-      <div className="glass-card" style={{ marginTop: '32px', overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-          <thead>
-            <tr style={{ borderBottom: '1px solid var(--border)', backgroundColor: 'var(--bg-secondary)' }}>
-              <th style={{ padding: '16px', fontWeight: 600, fontSize: '14px', color: 'var(--text-secondary)' }}>Lesson ID</th>
-              <th style={{ padding: '16px', fontWeight: 600, fontSize: '14px', color: 'var(--text-secondary)' }}>Lesson Title</th>
-              <th style={{ padding: '16px', fontWeight: 600, fontSize: '14px', color: 'var(--text-secondary)' }}>Module</th>
-              <th style={{ padding: '16px', fontWeight: 600, fontSize: '14px', color: 'var(--text-secondary)' }}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {lessons.map((lesson) => (
-              <tr key={lesson.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                <td style={{ padding: '16px', fontSize: '14px', color: 'var(--text-muted)' }}>#{lesson.id}</td>
-                <td style={{ padding: '16px', fontSize: '14px', fontWeight: 500 }}>{lesson.title}</td>
-                <td style={{ padding: '16px', fontSize: '14px' }}>{lesson.module?.title || `Module ${lesson.module_id}`}</td>
-                <td style={{ padding: '16px' }}>
-                  <Link href={`/admin/slides/${lesson.id}`} className="btn btn-ghost" style={{ padding: '6px 12px' }}>
-                    <Layers size={14} /> View Slides
-                  </Link>
-                </td>
+      <div className="bg-white border border-slate-200 rounded-[32px] overflow-hidden shadow-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-slate-50 border-b border-slate-100">
+                <th className="px-8 py-5 text-sm font-bold text-slate-400 uppercase tracking-wider">Lesson ID</th>
+                <th className="px-8 py-5 text-sm font-bold text-slate-400 uppercase tracking-wider">Lesson Title</th>
+                <th className="px-8 py-5 text-sm font-bold text-slate-400 uppercase tracking-wider">Module</th>
+                <th className="px-8 py-5 text-sm font-bold text-slate-400 uppercase tracking-wider text-right">Actions</th>
               </tr>
-            ))}
-            {lessons.length === 0 && (
-              <tr>
-                <td colSpan={4} style={{ padding: '32px', textAlign: 'center', color: 'var(--text-muted)' }}>No lessons found.</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-slate-50">
+              {lessons.map((lesson) => (
+                <tr key={lesson.id} className="hover:bg-slate-50/50 transition-colors group">
+                  <td className="px-8 py-5 text-sm text-slate-400 font-mono">#{lesson.id}</td>
+                  <td className="px-8 py-5 text-base font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">{lesson.title}</td>
+                  <td className="px-8 py-5 text-sm text-slate-500 font-medium">{lesson.module?.title || `Module ${lesson.module_id}`}</td>
+                  <td className="px-8 py-5 text-right">
+                    <Link 
+                      href={`/admin/slides/${lesson.id}`} 
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 font-bold rounded-xl hover:bg-indigo-600 hover:text-white transition-all text-sm"
+                    >
+                      <Layers size={14} /> View Slides
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+              {lessons.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="px-8 py-20 text-center text-slate-400 font-medium italic">
+                    No lessons found in the database.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

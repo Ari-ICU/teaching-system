@@ -26,92 +26,56 @@ export default function Modal({
 }: ModalProps) {
   if (!isOpen) return null;
 
-  const colors = {
-    danger: 'var(--rose)',
-    warning: 'var(--amber)',
-    info: 'var(--indigo)'
+  const themes = {
+    danger: {
+      bg: 'bg-rose-50',
+      iconColor: 'text-rose-500',
+      btnBg: 'bg-rose-500 hover:bg-rose-600',
+    },
+    warning: {
+      bg: 'bg-amber-50',
+      iconColor: 'text-amber-500',
+      btnBg: 'bg-amber-500 hover:bg-amber-600',
+    },
+    info: {
+      bg: 'bg-indigo-50',
+      iconColor: 'text-indigo-500',
+      btnBg: 'bg-indigo-500 hover:bg-indigo-600',
+    }
   };
 
+  const theme = themes[type];
+
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      zIndex: 9999,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '20px'
-    }}>
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-5">
       {/* Backdrop */}
       <div 
         onClick={onClose}
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(15, 23, 42, 0.4)',
-          backdropFilter: 'blur(8px)',
-          animation: 'fadeIn 0.2s ease-out'
-        }} 
-      />
+        className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200"
+      /> 
 
       {/* Modal Card */}
-      <div className="glass-card" style={{
-        position: 'relative',
-        width: '100%',
-        maxWidth: '440px',
-        background: 'white',
-        padding: '32px',
-        borderRadius: '24px',
-        boxShadow: '0 20px 50px rgba(0,0,0,0.15)',
-        animation: 'modalSlideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
-        overflow: 'hidden'
-      }}>
+      <div className="relative w-full max-w-[440px] bg-white p-8 rounded-[24px] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 slide-in-from-bottom-4 duration-300 ease-out">
         {/* Close Button */}
         <button 
           onClick={onClose}
-          style={{
-            position: 'absolute',
-            top: '20px',
-            right: '20px',
-            background: 'none',
-            border: 'none',
-            color: 'var(--text-muted)',
-            cursor: 'pointer',
-            padding: '4px'
-          }}
+          className="absolute top-5 right-5 p-2 text-slate-400 hover:text-slate-600 transition-colors border-none bg-transparent cursor-pointer rounded-full hover:bg-slate-50"
         >
           <X size={20} />
         </button>
 
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-          <div style={{
-            width: '64px',
-            height: '64px',
-            borderRadius: '20px',
-            background: `${colors[type]}15`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginBottom: '20px',
-            color: colors[type]
-          }}>
+        <div className="flex flex-col items-center text-center">
+          <div className={`w-16 h-16 rounded-[20px] ${theme.bg} flex items-center justify-center mb-5 ${theme.iconColor}`}>
             <AlertTriangle size={32} />
           </div>
 
-          <h3 style={{ fontSize: '20px', fontWeight: 800, marginBottom: '12px', color: 'var(--text-primary)' }}>{title}</h3>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '15px', lineHeight: '1.6', marginBottom: '32px' }}>{message}</p>
+          <h3 className="text-xl font-extrabold text-slate-900 mb-3">{title}</h3>
+          <p className="text-[15px] text-slate-600 leading-relaxed mb-8">{message}</p>
 
-          <div style={{ display: 'flex', gap: '12px', width: '100%' }}>
+          <div className="flex gap-3 w-full">
             <button 
               onClick={onClose}
-              className="btn btn-ghost"
-              style={{ flex: 1, justifyContent: 'center', padding: '14px' }}
+              className="flex-1 py-3.5 px-4 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold rounded-xl transition-all border border-slate-200 cursor-pointer"
             >
               {cancelText}
             </button>
@@ -120,32 +84,13 @@ export default function Modal({
                 onConfirm();
                 onClose();
               }}
-              className="btn"
-              style={{ 
-                flex: 1, 
-                justifyContent: 'center', 
-                padding: '14px',
-                background: type === 'danger' ? 'var(--rose)' : (type === 'warning' ? 'var(--amber)' : 'var(--indigo)'),
-                color: 'white',
-                border: 'none'
-              }}
+              className={`flex-1 py-3.5 px-4 ${theme.btnBg} text-white font-bold rounded-xl transition-all border-none cursor-pointer shadow-lg shadow-black/10`}
             >
               {confirmText}
             </button>
           </div>
         </div>
       </div>
-
-      <style jsx>{`
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        @keyframes modalSlideUp {
-          from { opacity: 0; transform: translateY(20px) scale(0.95); }
-          to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-      `}</style>
     </div>
   );
 }

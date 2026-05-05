@@ -1,54 +1,38 @@
-"use client";
-
-import { useState } from "react";
-import { usePathname } from "next/navigation";
+import type { Metadata, Viewport } from "next";
 import { Inter, Outfit, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
-import Sidebar from "@/components/Sidebar";
-import MobileNav from "@/components/MobileNav";
-import { AuthProvider } from "@/context/AuthContext";
+import ClientLayout from "@/components/ClientLayout";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" });
 const jetbrains = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono" });
+
+export const metadata: Metadata = {
+  title: {
+    default: "Ari-ICU | Professional Teaching System",
+    template: "%s | Ari-ICU"
+  },
+  description: "A premium, interactive curriculum management and learning platform for modern technical education.",
+  keywords: ["learning management system", "interactive slides", "programming course", "technical education"],
+  authors: [{ name: "Ari-ICU Team" }],
+  viewport: "width=device-width, initial-scale=1, maximum-scale=1",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#6366f1",
+};
 
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const pathname = usePathname();
-
-  // Define routes where navigation should be hidden
-  const isAuthPage = pathname === '/login' || pathname === '/register';
-
   return (
-    <html lang="en" suppressHydrationWarning data-scroll-behavior="smooth">
-      <body suppressHydrationWarning className={`${inter.variable} ${outfit.variable} ${jetbrains.variable}`}>
-        <AuthProvider>
-          <div className="glow-orb glow-orb-1" />
-          <div className="glow-orb glow-orb-2" />
-          
-          {!isAuthPage && (
-            <MobileNav 
-              isOpen={isSidebarOpen} 
-              onToggle={() => setIsSidebarOpen(!isSidebarOpen)} 
-            />
-          )}
-
-          <div className="app-layout">
-            {!isAuthPage && (
-              <Sidebar 
-                isOpen={isSidebarOpen} 
-                onClose={() => setIsSidebarOpen(false)} 
-              />
-            )}
-            <main className={isAuthPage ? "auth-main" : "main-content"}>
-              {children}
-            </main>
-          </div>
-        </AuthProvider>
+    <html lang="en" className="scroll-smooth" suppressHydrationWarning>
+      <body className={`${inter.variable} ${outfit.variable} ${jetbrains.variable} antialiased min-h-screen bg-slate-50`} suppressHydrationWarning>
+        <ClientLayout>
+          {children}
+        </ClientLayout>
       </body>
     </html>
   );

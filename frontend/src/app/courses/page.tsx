@@ -127,80 +127,89 @@ export default function BrowseCoursesPage() {
   );
 
   return (
-    <div className="page">
-      <header className="page-header" style={{ textAlign: 'center', maxWidth: '800px', margin: '0 auto 60px' }}>
-        <span className="badge badge-indigo" style={{ marginBottom: '16px' }}>COURSE DISCOVERY</span>
-        <h1 className="page-title responsive-title" style={{ marginBottom: '16px' }}>Expand Your Knowledge</h1>
-        <p className="page-subtitle responsive-subtitle">
+    <div className="p-6 md:p-8 lg:p-12 max-w-7xl mx-auto">
+      <header className="text-center max-w-2xl mx-auto mb-16 space-y-4">
+        <span className="inline-block px-3 py-1 rounded-full bg-indigo-50 text-indigo-600 text-[11px] font-bold uppercase tracking-wider mb-2">
+          COURSE DISCOVERY
+        </span>
+        <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight">Expand Your Knowledge</h1>
+        <p className="text-slate-500 text-lg md:text-xl leading-relaxed">
           Browse all specialized courses and enroll to unlock professional curriculum and hands-on exercises.
         </p>
       </header>
 
       {/* Enrollment Modal */}
       {showModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}>
-          <div className="glass-card animate-fadeInUp" style={{ maxWidth: '550px', width: '100%', padding: 'clamp(20px, 5vw, 40px)', background: 'white', position: 'relative' }}>
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-5">
+          <div 
+            onClick={() => setShowModal(false)}
+            className="absolute inset-0 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300"
+          />
+          <div className="relative bg-white rounded-[32px] shadow-2xl w-full max-w-[550px] p-8 md:p-10 overflow-hidden animate-in fade-in zoom-in-95 slide-in-from-bottom-4 duration-300">
             <button 
               onClick={() => setShowModal(false)}
-              style={{ position: 'absolute', right: '24px', top: '24px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
+              className="absolute right-6 top-6 p-2 text-slate-400 hover:text-slate-600 transition-colors border-none bg-transparent cursor-pointer rounded-full hover:bg-slate-50"
             >
               <X size={24} />
             </button>
 
-            <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-              <div style={{ width: '64px', height: '64px', background: 'var(--indigo-light)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-                <ShieldCheck size={32} color="var(--indigo)" />
+            <div className="text-center mb-10">
+              <div className="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-indigo-600">
+                <ShieldCheck size={32} />
               </div>
-              <h2 style={{ fontSize: '24px', fontWeight: 800 }}>Course Verification</h2>
-              <p style={{ color: 'var(--text-secondary)', marginTop: '8px' }}>
-                Enrolling in <strong>{selectedCourse?.title}</strong>
+              <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">Course Verification</h2>
+              <p className="text-slate-500 mt-2 font-medium">
+                Enrolling in <strong className="text-indigo-600">{selectedCourse?.title}</strong>
               </p>
             </div>
             
-            <form onSubmit={handleEnrollSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: 700, marginBottom: '8px', color: 'var(--text-primary)' }}>Your Phone Number</label>
+            <form onSubmit={handleEnrollSubmit} className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-900 block ml-1">Your Phone Number</label>
                 <input 
                   type="text" 
-                  className="url-input" 
+                  className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-slate-900 placeholder:text-slate-400"
                   placeholder="e.g. 012 345 678" 
                   required 
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  style={{ width: '100%' }}
                 />
               </div>
 
-              <div>
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: 700, marginBottom: '8px', color: 'var(--text-primary)' }}>Physical Invoice / Receipt Photo</label>
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-900 block ml-1">Physical Invoice / Receipt Photo</label>
                 {!previewUrl ? (
-                  <div style={{ position: 'relative', height: '140px', border: '2px dashed var(--border)', borderRadius: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '12px', background: 'var(--bg-secondary)', cursor: 'pointer' }}>
-                    <Upload size={24} color="var(--text-muted)" />
-                    <span style={{ fontSize: '14px', color: 'var(--text-muted)' }}>Click to upload screenshot</span>
+                  <div className="relative h-40 border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center gap-2 bg-slate-50/50 hover:bg-slate-50 transition-colors cursor-pointer">
+                    <Upload size={24} className="text-slate-300" />
+                    <span className="text-sm font-bold text-slate-400">Click to upload screenshot</span>
                     <input 
                       type="file" 
                       accept="image/*" 
                       required 
                       onChange={handleFileChange}
-                      style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer' }} 
+                      className="absolute inset-0 opacity-0 cursor-pointer" 
                     />
                   </div>
                 ) : (
-                  <div style={{ position: 'relative', borderRadius: '16px', overflow: 'hidden', border: '1px solid var(--border)' }}>
-                    <img src={previewUrl} alt="Preview" style={{ width: '100%', height: '160px', objectFit: 'cover' }} />
+                  <div className="relative rounded-2xl overflow-hidden border border-slate-200 aspect-video bg-black">
+                    <img src={previewUrl} alt="Preview" className="w-full h-full object-contain" />
                     <button 
                       type="button"
                       onClick={() => { setScreenshot(null); setPreviewUrl(null); }}
-                      style={{ position: 'absolute', right: '8px', top: '8px', background: 'rgba(0,0,0,0.5)', color: 'white', border: 'none', borderRadius: '50%', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                      className="absolute right-3 top-3 bg-black/50 hover:bg-black/70 text-white border-none rounded-full w-8 h-8 flex items-center justify-center cursor-pointer backdrop-blur-sm transition-colors"
                     >
-                      <X size={14} />
+                      <X size={16} />
                     </button>
                   </div>
                 )}
-                <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '8px' }}>Please ensure the invoice number and date are clearly visible.</p>
+                <p className="text-[11px] text-slate-400 font-medium ml-1">Please ensure the invoice number and date are clearly visible.</p>
               </div>
 
-              <button type="submit" className="btn btn-primary" style={{ width: '100%', height: '52px', fontSize: '16px' }} disabled={enrollingId !== null}>
+              <button 
+                type="submit" 
+                className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl shadow-lg shadow-indigo-600/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                disabled={enrollingId !== null}
+              >
                 {enrollingId !== null ? <><Loader2 className="animate-spin" size={20} /> Submitting...</> : "Submit for Verification"}
               </button>
             </form>
@@ -209,21 +218,20 @@ export default function BrowseCoursesPage() {
       )}
 
       {/* Search & Filter */}
-      <div className="glass-card" style={{ padding: '20px', marginBottom: '48px', display: 'flex', gap: '16px', alignItems: 'center' }}>
-        <div style={{ position: 'relative', flex: 1 }}>
-          <Search style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} size={20} />
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-md transition-shadow p-1 mb-12 flex items-center group focus-within:border-indigo-500/50">
+        <div className="relative flex-1">
+          <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" size={20} />
           <input 
             type="text" 
             placeholder="Search for a course..." 
-            className="url-input" 
+            className="w-full pl-14 pr-6 h-14 text-lg bg-transparent border-none outline-none text-slate-900 placeholder:text-slate-400"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            style={{ width: '100%', paddingLeft: '52px', background: 'transparent', border: 'none' }}
           />
         </div>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <div className="space-y-6">
         {filteredCourses.map((course, index) => {
           const isEnrolled = myCourses.includes(course.id);
           const isExpanded = expandedCourseId === course.id;
@@ -231,76 +239,67 @@ export default function BrowseCoursesPage() {
           return (
             <div 
               key={course.id} 
-              className="glass-card animate-fadeInUp" 
-              style={{ 
-                padding: '0', 
-                overflow: 'hidden', 
-                animationDelay: `${index * 0.1}s`,
-                display: 'flex',
-                flexDirection: 'column'
-              }}
+              className="group bg-white border border-slate-200 rounded-[32px] shadow-sm hover:shadow-xl transition-all overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500"
+              style={{ animationDelay: `${index * 100}ms` }}
             >
-              <div className="course-item-header">
-                <div style={{ 
-                  width: '80px', 
-                  height: '80px', 
-                  background: 'var(--indigo-light)', 
-                  borderRadius: '20px', 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'center', 
-                  flexShrink: 0,
-                  overflow: 'hidden'
-                }}>
+              <div className="p-6 md:p-8 flex flex-col lg:flex-row items-center gap-8">
+                <div className="w-24 h-24 md:w-28 md:h-28 bg-indigo-50 rounded-[32px] flex items-center justify-center shrink-0 overflow-hidden shadow-inner group-hover:scale-105 transition-transform duration-500">
                    {course.image ? (
                      <img 
                        src={course.image.startsWith('http') ? course.image : `${process.env.NEXT_PUBLIC_STORAGE_URL || 'http://localhost:8080/storage'}/${course.image}`} 
                        alt={course.title} 
-                       style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                       className="w-full h-full object-cover"
                      />
                    ) : (
-                     <BookOpen size={36} color="var(--indigo)" />
+                     <BookOpen size={48} className="text-indigo-500" />
                    )}
                 </div>
 
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
-                    <h3 style={{ fontSize: '24px', fontWeight: 800 }}>{course.title}</h3>
-                    <span className="badge badge-indigo" style={{ fontWeight: 800 }}>${course.price || '0.00'}</span>
+                <div className="flex-1 text-center lg:text-left min-w-0 space-y-4">
+                  <div className="flex flex-col md:flex-row items-center justify-center lg:justify-start gap-3">
+                    <h3 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">{course.title}</h3>
+                    <span className="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full text-sm font-black border border-emerald-100 shadow-sm">${course.price || '0.00'}</span>
                   </div>
-                  <p style={{ color: 'var(--text-secondary)', fontSize: '15px' }}>
+                  <p className="text-slate-500 text-base leading-relaxed line-clamp-2 max-w-2xl font-medium">
                     {course.description || "Master this technology from scratch with our professional, hands-on curriculum."}
                   </p>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px 24px', marginTop: '16px', fontSize: '13px', color: 'var(--text-muted)', fontWeight: 600 }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Layers size={14} /> {course.modules_count || 0} Modules</span>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Users size={14} /> 1,240 Students</span>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Star size={14} color="var(--amber)" fill="var(--amber)" /> 4.9 Rating</span>
+                  <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 md:gap-8 text-xs font-bold uppercase tracking-wider text-slate-400">
+                    <div className="flex items-center gap-2 text-slate-500">
+                      <Layers size={16} className="text-indigo-500" />
+                      <span>{course.modules_count || 0} Modules</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Users size={16} />
+                      <span>1,240 Students</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Star size={16} className="text-amber-400 fill-amber-400" />
+                      <span>4.9 Rating</span>
+                    </div>
                   </div>
                 </div>
 
-                <div className="course-item-actions">
+                <div className="w-full lg:w-72 flex flex-col gap-3 shrink-0">
                   <button 
                     onClick={() => setExpandedCourseId(isExpanded ? null : course.id)}
-                    className="btn btn-ghost" 
-                    style={{ border: '1px solid var(--border)', flex: 1, justifyContent: 'center' }}
+                    className="w-full py-3.5 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold rounded-2xl transition-all border border-slate-200 cursor-pointer flex items-center justify-center gap-2"
                   >
                     {isExpanded ? <><ChevronUp size={18} /> Hide Syllabus</> : <><ChevronDown size={18} /> View Syllabus</>}
                   </button>
 
                   {(user?.role === 'admin' || user?.role === 'teacher') ? (
-                    <Link href="/admin/courses" className="btn btn-ghost" style={{ border: '1px solid var(--indigo)', color: 'var(--indigo)', flex: 1, justifyContent: 'center' }}>
+                    <Link href="/admin/courses" className="w-full py-3.5 bg-white border border-indigo-200 text-indigo-600 hover:bg-indigo-50 font-bold rounded-2xl transition-all flex items-center justify-center gap-2">
                       <Layers size={18} /> Manage Course
                     </Link>
                   ) : isEnrolled ? (
-                    <Link href="/modules" className="btn" style={{ background: 'var(--emerald)', color: 'white', border: 'none', flex: 1, justifyContent: 'center' }}>
+                    <Link href="/modules" className="w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-2xl shadow-lg shadow-emerald-500/20 transition-all flex items-center justify-center gap-2">
                       <CheckCircle2 size={18} /> Go to Lessons
                     </Link>
                   ) : (
                     <button 
                       onClick={() => handleOpenEnroll(course)} 
-                      className="btn btn-primary" 
+                      className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl shadow-lg shadow-indigo-600/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed" 
                       disabled={enrollingId === course.id}
-                      style={{ flex: 1, justifyContent: 'center' }}
                     >
                       {enrollingId === course.id ? (
                         <><Loader2 size={18} className="animate-spin" /> Submitting...</>
@@ -314,24 +313,26 @@ export default function BrowseCoursesPage() {
 
               {/* Expanded Syllabus Section */}
               {isExpanded && (
-                <div style={{ background: 'var(--bg-secondary)', borderTop: '1px solid var(--border)', padding: 'clamp(20px, 5vw, 32px)' }}>
-                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '24px' }}>
-                      <div style={{ width: '4px', height: '24px', background: 'var(--indigo)', borderRadius: '2px' }}></div>
-                      <h4 style={{ fontSize: '18px', fontWeight: 800 }}>Course Curriculum Preview</h4>
+                <div className="bg-slate-50/80 border-t border-slate-100 p-8 md:p-10 animate-in slide-in-from-top-4 duration-300">
+                   <div className="flex items-center gap-3 mb-8">
+                      <div className="w-1 h-6 bg-indigo-500 rounded-full"></div>
+                      <h4 className="text-lg font-extrabold text-slate-900 tracking-tight">Course Curriculum Preview</h4>
                    </div>
 
                    {course.modules?.length === 0 ? (
-                      <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '20px' }}>No modules published for this course yet.</p>
+                      <div className="bg-white rounded-2xl p-8 text-center border border-slate-200 italic text-slate-400 font-medium">
+                        No modules published for this course yet.
+                      </div>
                    ) : (
-                      <div className="grid-responsive-syllabus">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                         {course.modules?.map((module: any, mIndex: number) => (
-                          <div key={module.id} className="glass-card" style={{ padding: '20px', display: 'flex', gap: '16px', alignItems: 'center', background: 'white' }}>
-                             <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: `${module.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          <div key={module.id} className="bg-white border border-slate-200 rounded-2xl p-5 flex items-center gap-4 shadow-sm hover:border-indigo-500/30 transition-colors">
+                             <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: `${module.color}15` }}>
                                 <ModuleIcon icon={module.icon} imageUrl={module.image} size={20} color={module.color} />
                              </div>
-                             <div>
-                                <div style={{ fontSize: '12px', fontWeight: 800, color: 'var(--text-muted)', marginBottom: '2px' }}>CHAPTER {mIndex + 1}</div>
-                                <div style={{ fontSize: '16px', fontWeight: 700 }}>{module.title}</div>
+                             <div className="min-w-0">
+                                <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-0.5">CHAPTER {mIndex + 1}</div>
+                                <div className="text-sm font-bold text-slate-900 truncate">{module.title}</div>
                              </div>
                           </div>
                         ))}
@@ -343,50 +344,6 @@ export default function BrowseCoursesPage() {
           );
         })}
       </div>
-
-      <style jsx>{`
-        .responsive-title {
-          font-size: clamp(32px, 8vw, 48px);
-        }
-        .responsive-subtitle {
-          font-size: clamp(16px, 4vw, 20px);
-        }
-        .course-item-header {
-          padding: 32px;
-          display: flex;
-          gap: 32px;
-          align-items: center;
-        }
-        .course-item-actions {
-          display: flex;
-          gap: 12px;
-        }
-        .grid-responsive-syllabus {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-          gap: 20px;
-        }
-
-        @media (max-width: 1024px) {
-          .course-item-header {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 24px;
-          }
-          .course-item-actions {
-            width: 100%;
-          }
-        }
-
-        @media (max-width: 640px) {
-          .course-item-header {
-            padding: 24px;
-          }
-          .course-item-actions {
-            flex-direction: column;
-          }
-        }
-      `}</style>
     </div>
   );
 }

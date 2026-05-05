@@ -1,20 +1,14 @@
 "use client";
 
-import { useState, useEffect, use, useMemo } from "react";
+import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { ArrowLeft, Save, Loader2, FileText, AlertCircle, Eye, Edit3, Terminal, Layout, Columns2, Square, Type, ImageIcon, ChevronRight, Check, Plus, Info } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import DropdownSelect from "@/components/ui/DropdownSelect";
-import { marked } from "marked";
 import SlideViewer from "@/components/SlideViewer";
-import dynamic from "next/dynamic";
-
-const ReactQuill = dynamic(() => import("react-quill-new"), { 
-  ssr: false,
-  loading: () => <div className="quill-loader">Loading Editor...</div>
-});
-import "react-quill-new/dist/quill.snow.css";
+import DropdownSelect from "@/components/ui/DropdownSelect";
+import RichTextEditor from "@/components/admin/RichTextEditor";
+import Editor from "@monaco-editor/react";
 
 export default function NewSlidePage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -32,6 +26,8 @@ export default function NewSlidePage({ params }: { params: Promise<{ id: string 
     code_snippet: "",
     image_position: "top",
     image_width: "100",
+    secondary_image_position: "top",
+    secondary_image_width: "100",
     code_position: "right",
     code_theme: "terminal",
   });
@@ -93,6 +89,8 @@ export default function NewSlidePage({ params }: { params: Promise<{ id: string 
       data.append('content', formData.content);
       data.append('image_position', formData.image_position);
       data.append('image_width', formData.image_width);
+      data.append('secondary_image_position', formData.secondary_image_position);
+      data.append('secondary_image_width', formData.secondary_image_width);
       data.append('code_position', formData.code_position);
       data.append('code_theme', formData.code_theme);
       data.append('code_snippet', formData.code_snippet || '');
@@ -120,605 +118,402 @@ export default function NewSlidePage({ params }: { params: Promise<{ id: string 
   };
 
   const layoutOptions = [
-    { id: 'standard', name: 'Standard', icon: <Layout size={20} />, description: 'Default layout with text and media.' },
-    { id: 'split', name: 'Split Screen', icon: <Columns2 size={20} />, description: 'Equal parts text and media.' },
-    { id: 'centered', name: 'Centered', icon: <Square size={20} />, description: 'Minimalist, centered focus.' },
-    { id: 'full-code', name: 'Full Code', icon: <Terminal size={20} />, description: 'Maximize the code editor view.' },
+    { id: 'standard', name: 'Standard', icon: <Layout size={20} />, description: 'Top-down flow with inline media.' },
+    { id: 'split', name: 'Split Screen', icon: <Columns2 size={20} />, description: 'Equal columns for text and code.' },
+    { id: 'centered', name: 'Centered', icon: <Square size={20} />, description: 'Minimalist focus for key concepts.' },
+    { id: 'full-code', name: 'Full Code', icon: <Terminal size={20} />, description: 'Maximizes the terminal playground.' },
   ];
 
   if (status === "loading_initial") {
     return (
-        <div className="page" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
-          <Loader2 className="animate-spin" size={48} color="var(--indigo)" />
-          <p style={{ marginTop: '20px', color: 'var(--text-secondary)' }}>Opening Slide Studio...</p>
+        <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 space-y-6">
+          <div className="w-20 h-20 bg-white rounded-[32px] shadow-xl flex items-center justify-center border border-slate-100">
+            <Loader2 className="animate-spin text-indigo-500" size={32} />
+          </div>
+          <div className="text-center space-y-1">
+            <p className="text-slate-900 font-black text-lg">Opening Slide Studio</p>
+            <p className="text-slate-400 font-medium">Synchronizing curriculum assets...</p>
+          </div>
         </div>
       );
   }
 
   return (
-    <div className="page studio-page">
-      <div className="studio-top-nav">
-        <Link href={`/admin/lessons/${lessonId}/slides`} className="back-link">
-          <ArrowLeft size={16} /> <span>Back to Lesson</span>
-        </Link>
-        <div className="studio-tabs">
-          <button onClick={() => setActiveTab("edit")} className={activeTab === "edit" ? "active" : ""}>
-            <Edit3 size={14} /> Editor
-          </button>
-          <button onClick={() => setActiveTab("preview")} className={activeTab === "preview" ? "active" : ""}>
-            <Eye size={14} /> Preview
-          </button>
+    <div className="min-h-screen bg-slate-50 flex flex-col">
+      {/* Top Bar Navigation */}
+      <nav className="h-20 bg-white border-b border-slate-200 px-6 flex items-center justify-between sticky top-0 z-50 shadow-sm">
+        <div className="flex items-center gap-6">
+          <Link href={`/admin/lessons/${lessonId}/slides`} className="flex items-center gap-2 text-slate-500 hover:text-slate-900 font-bold text-sm transition-colors group">
+            <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" /> <span>Slide Manager</span>
+          </Link>
+          <div className="h-6 w-px bg-slate-200" />
+          <div className="hidden md:flex bg-slate-100 p-1 rounded-xl border border-slate-200">
+            <button 
+              onClick={() => setActiveTab("edit")} 
+              className={`px-5 py-1.5 rounded-lg text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 ${activeTab === "edit" ? "bg-white text-indigo-600 shadow-sm shadow-indigo-500/5" : "text-slate-400 hover:text-slate-600"}`}
+            >
+              <Edit3 size={14} /> Editor
+            </button>
+            <button 
+              onClick={() => setActiveTab("preview")} 
+              className={`px-5 py-1.5 rounded-lg text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 ${activeTab === "preview" ? "bg-white text-indigo-600 shadow-sm shadow-indigo-500/5" : "text-slate-400 hover:text-slate-600"}`}
+            >
+              <Eye size={14} /> Live View
+            </button>
+          </div>
         </div>
-        <div className="studio-actions">
-           <button onClick={handleSubmit} className="btn btn-primary" disabled={status === "saving"}>
-             {status === "saving" ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-             Publish Slide
+
+        <div className="flex items-center gap-4">
+           <div className="hidden lg:flex flex-col items-end mr-4">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Target Lesson</span>
+              <span className="text-sm font-bold text-slate-900 line-clamp-1 max-w-[200px]">{lesson?.title}</span>
+           </div>
+           <button 
+             onClick={handleSubmit} 
+             className="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-xl shadow-indigo-600/20 transition-all flex items-center gap-2 disabled:opacity-50 group" 
+             disabled={status === "saving"}
+           >
+             {status === "saving" ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+             <span>Publish Slide</span>
            </button>
         </div>
-      </div>
+      </nav>
 
-      <main className="studio-content">
+      <main className="flex-1 overflow-auto">
         {activeTab === "edit" ? (
-          <div className="editor-grid animate-fadeIn">
-            {/* Left Column: Form Fields */}
-            <div className="editor-main">
-              <section className="form-section">
-                <label className="section-label">Slide Fundamentals</label>
-                <div className="input-group">
+          <div className="max-w-8xl mx-auto p-8 md:p-12 lg:p-16 grid grid-cols-1 lg:grid-cols-4 gap-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
+            
+            {/* Main Form Content */}
+            <div className="lg:col-span-3 space-y-12">
+              
+              {/* Fundamentals Section */}
+              <section className="bg-white rounded-[40px] p-10 shadow-sm border border-slate-200/60 relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50/50 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-indigo-50 transition-colors" />
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-8 block ml-1">SLIDE FUNDAMENTALS</label>
+                
+                <div className="space-y-8 relative z-10">
                   <input 
                     type="text" 
-                    className="title-input" 
+                    className="w-full bg-transparent border-none p-0 text-3xl md:text-4xl font-extrabold text-slate-900 placeholder:text-slate-200 focus:ring-0 outline-none tracking-tight" 
                     placeholder="Enter a descriptive title..."
                     value={formData.title}
                     onChange={(e) => setFormData({...formData, title: e.target.value})}
                   />
-                  <div className="type-badges">
+                  
+                  <div className="flex flex-wrap gap-3">
                     {['concept', 'practice', 'summary'].map(t => (
                       <button 
                         key={t}
                         type="button"
-                        className={`type-badge ${formData.type === t ? 'active' : ''}`}
+                        className={`px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest border transition-all duration-300 ${formData.type === t ? 'bg-indigo-600 border-indigo-600 text-white shadow-xl shadow-indigo-600/30 -translate-y-1' : 'bg-slate-50 border-slate-100 text-slate-400 hover:border-slate-200 hover:bg-white'}`}
                         onClick={() => setFormData({...formData, type: t})}
                       >
-                        {t.toUpperCase()}
+                        {t}
                       </button>
                     ))}
                   </div>
                 </div>
               </section>
 
-              <section className="form-section">
-                <label className="section-label">Content Architecture</label>
-                <div className="layout-selector">
+              {/* Code Playground Section (Visible if type is practice) */}
+              {formData.type === 'practice' && (
+                <section className="bg-slate-900 rounded-[40px] p-10 shadow-2xl border border-slate-800 space-y-8 animate-in zoom-in-95 fade-in duration-500 overflow-hidden relative group">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl -mr-32 -mt-32" />
+                  
+                  <div className="flex items-center justify-between relative z-10">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">CODE PLAYGROUND</label>
+                      <p className="text-slate-400 text-xs font-medium">Define the interactive code example for this practice slide.</p>
+                    </div>
+                    <div className="flex items-center gap-2 px-3 py-1.5 bg-indigo-500/10 text-indigo-400 rounded-xl text-[9px] font-black uppercase tracking-widest border border-indigo-500/20 backdrop-blur-sm">
+                       <Terminal size={14} /> <span>Interactive Snippet</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-6 relative z-10">
+                    <div className="flex flex-col md:flex-row gap-4">
+                      <div className="flex-1 space-y-2">
+                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Terminal Theme</span>
+                        <DropdownSelect 
+                          variant="dark"
+                          options={[
+                            { value: "terminal", label: "Modern Dark (Terminal)" },
+                            { value: "editor", label: "VS Code Classic (Editor)" },
+                            { value: "browser", label: "Chrome Preview (Browser)" }
+                          ]}
+                          value={formData.code_theme}
+                          onChange={(value) => setFormData({...formData, code_theme: value})}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Interface Position</span>
+                        <div className="flex bg-slate-800 p-1 rounded-xl border border-slate-700">
+                          {['left', 'right'].map(pos => (
+                            <button 
+                              key={pos}
+                              type="button"
+                              className={`px-6 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${formData.code_position === pos ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' : 'text-slate-500 hover:text-slate-300'}`}
+                              onClick={() => setFormData({...formData, code_position: pos as any})}
+                            >
+                              {pos}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="rounded-3xl overflow-hidden border border-slate-700 bg-[#0f172a] shadow-inner group/editor">
+                      <div className="h-80 w-full relative">
+                        <Editor
+                          height="100%"
+                          defaultLanguage="javascript"
+                          theme="vs-dark"
+                          value={formData.code_snippet}
+                          onChange={(value) => setFormData({...formData, code_snippet: value || ""})}
+                          options={{
+                            minimap: { enabled: false },
+                            fontSize: 14,
+                            fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+                            padding: { top: 20, bottom: 20 },
+                            scrollBeyondLastLine: false,
+                            wordWrap: "on",
+                            lineHeight: 1.6,
+                            scrollbar: {
+                               vertical: 'hidden',
+                               horizontal: 'hidden'
+                            }
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </section>
+              )}
+
+              {/* Layout Section */}
+              <section className="space-y-6">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">CONTENT ARCHITECTURE</label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {layoutOptions.map(opt => (
                     <button 
                       key={opt.id}
                       type="button"
-                      className={`layout-card ${formData.layout_type === opt.id ? 'active' : ''}`}
+                      className={`flex items-center gap-6 p-6 rounded-3xl border-2 transition-all text-left group relative overflow-hidden ${formData.layout_type === opt.id ? 'bg-white border-indigo-600 shadow-xl shadow-indigo-500/5' : 'bg-white/50 border-slate-200 hover:border-slate-300'}`}
                       onClick={() => setFormData({...formData, layout_type: opt.id})}
                     >
-                      <div className="layout-icon">{opt.icon}</div>
-                      <div className="layout-info">
-                        <span className="layout-name">{opt.name}</span>
-                        <span className="layout-desc">{opt.description}</span>
+                      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 transition-colors ${formData.layout_type === opt.id ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-400'}`}>
+                        {opt.icon}
                       </div>
-                      {formData.layout_type === opt.id && <div className="active-check"><Check size={14} /></div>}
+                      <div className="space-y-1">
+                        <span className="block font-bold text-slate-900 text-lg">{opt.name}</span>
+                        <span className="block text-xs font-medium text-slate-500 leading-relaxed">{opt.description}</span>
+                      </div>
+                      {formData.layout_type === opt.id && <div className="absolute top-4 right-4 text-indigo-600 animate-in zoom-in duration-300"><Check size={20} strokeWidth={3} /></div>}
                     </button>
                   ))}
                 </div>
               </section>
 
-              <section className="form-section">
-                <div className="section-header" style={{ marginBottom: '16px' }}>
-                  <label className="section-label">Teaching Material</label>
-                  <div className="editor-info-badge">
-                    <Type size={12} />
-                    <span>RICH TEXT ENABLED</span>
-                  </div>
+              {/* Rich Text Editor Section */}
+              <section className="bg-white rounded-[40px] overflow-hidden shadow-sm border border-slate-200/60">
+                <div className="flex items-center justify-between px-10 pt-8 pb-6">
+                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">TEACHING MATERIAL</label>
+                   <div className="flex items-center gap-2 px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full text-[9px] font-black uppercase tracking-widest border border-emerald-100">
+                      <Type size={12} /> <span>Rich Text Editor</span>
+                   </div>
                 </div>
-                
-                <div className="rich-editor-wrapper">
-                  <ReactQuill 
-                    theme="snow"
+                <div className="border-t border-slate-100">
+                  <RichTextEditor
                     value={formData.content}
-                    onChange={(content) => setFormData({...formData, content})}
-                    placeholder="Describe your concepts, add lists, or format text..."
-                    modules={{
-                      toolbar: [
-                        [{ 'header': [2, 3, false] }],
-                        ['bold', 'italic', 'underline', 'strike'],
-                        [{'list': 'ordered'}, {'list': 'bullet'}],
-                        [{ 'align': [] }],
-                        ['blockquote', 'code-block'],
-                        ['link', 'clean']
-                      ],
-                    }}
+                    onChange={(html) => setFormData((prev) => ({ ...prev, content: html }))}
+                    placeholder="Describe your concepts, add lists, highlight code..."
                   />
                 </div>
               </section>
 
-              <section className="form-section">
-                <label className="section-label">Code Integration</label>
-                <div className="code-options-bar">
-                  <div className="option-group">
-                    <span>Theme:</span>
-                    <button type="button" className={formData.code_theme === 'terminal' ? 'active' : ''} onClick={() => setFormData({...formData, code_theme: 'terminal'})}>Terminal</button>
-                    <button type="button" className={formData.code_theme === 'browser' ? 'active' : ''} onClick={() => setFormData({...formData, code_theme: 'browser'})}>Browser</button>
-                    <button type="button" className={formData.code_theme === 'editor' ? 'active' : ''} onClick={() => setFormData({...formData, code_theme: 'editor'})}>Editor</button>
-                  </div>
-                  <div className="option-group">
-                    <span>Position:</span>
-                    <button type="button" className={formData.code_position === 'right' ? 'active' : ''} onClick={() => setFormData({...formData, code_position: 'right'})}>Side</button>
-                    <button type="button" className={formData.code_position === 'bottom' ? 'active' : ''} onClick={() => setFormData({...formData, code_position: 'bottom'})}>Bottom</button>
-                  </div>
-                </div>
-                <textarea 
-                  className="code-textarea"
-                  placeholder="Paste your interactive code here..."
-                  value={formData.code_snippet}
-                  onChange={(e) => setFormData({...formData, code_snippet: e.target.value})}
-                />
-              </section>
+
             </div>
 
-            {/* Right Column: Visual Controls */}
-            <div className="editor-sidebar">
-              <section className="sidebar-section">
-                <label className="section-label">Visual Media</label>
-                <div className="media-uploads">
-                  <div className="upload-box">
-                    <label>Primary Image</label>
-                    <div className="upload-preview" style={{ backgroundImage: `url(${imagePreview})` }}>
-                      {!imagePreview && <ImageIcon size={24} />}
-                      <input type="file" onChange={(e) => handleFileChange(e, false)} accept="image/*" />
+            {/* Sidebar Controls */}
+            <aside className="space-y-8">
+              
+              {/* Media Section */}
+              <section className="bg-white rounded-[32px] p-8 shadow-sm border border-slate-200/60 space-y-8">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] block">VISUAL MEDIA</label>
+                
+                <div className="space-y-8">
+                  {/* Primary Upload */}
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-black text-slate-900 uppercase tracking-widest">Primary Image</span>
+                      {imagePreview && (
+                        <button type="button" onClick={() => { setImageFile(null); setImagePreview(null); }} className="text-[10px] font-black text-rose-500 uppercase tracking-widest hover:underline">Clear</button>
+                      )}
                     </div>
-                  </div>
-                  <div className="upload-box">
-                    <label>Secondary Image (Optional)</label>
-                    <div className="upload-preview" style={{ backgroundImage: `url(${secondaryImagePreview})` }}>
-                      {!secondaryImagePreview && <Plus size={24} />}
-                      <input type="file" onChange={(e) => handleFileChange(e, true)} accept="image/*" />
-                    </div>
-                  </div>
-                </div>
-              </section>
-
-              <section className="sidebar-section">
-                <label className="section-label">Media Positioning</label>
-                <div className="pos-grid">
-                  {['top', 'bottom', 'left', 'right'].map(pos => (
-                    <button 
-                      key={pos}
-                      type="button"
-                      className={`pos-btn ${formData.image_position === pos ? 'active' : ''}`}
-                      onClick={() => setFormData({...formData, image_position: pos as any})}
+                    <div 
+                      className={`relative aspect-[4/3] rounded-3xl border-2 border-dashed transition-all overflow-hidden flex items-center justify-center bg-slate-50 group/upload ${imagePreview ? 'border-indigo-600/20' : 'border-slate-200 hover:border-indigo-400'}`}
                     >
-                      {pos.toUpperCase()}
-                    </button>
-                  ))}
-                </div>
-                <div className="width-control">
-                   <div className="width-header">
-                     <span>Width: {formData.image_width}%</span>
-                   </div>
-                   <input 
-                     type="range" min="10" max="100" step="5"
-                     value={formData.image_width}
-                     onChange={(e) => setFormData({...formData, image_width: e.target.value})}
-                   />
+                      {imagePreview ? (
+                        <img src={imagePreview} className="w-full h-full object-cover animate-in fade-in duration-500" alt="Preview" />
+                      ) : (
+                        <div className="text-center space-y-2">
+                          <ImageIcon size={32} className="text-slate-300 mx-auto group-hover/upload:scale-110 transition-transform" />
+                          <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Select Asset</span>
+                        </div>
+                      )}
+                      <input type="file" onChange={(e) => handleFileChange(e, false)} accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" />
+                    </div>
+                  </div>
+
+                  {/* Secondary Upload */}
+                  <div className="space-y-4 pt-4 border-t border-slate-100">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-black text-slate-900 uppercase tracking-widest">Secondary</span>
+                      {secondaryImagePreview && (
+                        <button type="button" onClick={() => { setSecondaryImageFile(null); setSecondaryImagePreview(null); }} className="text-[10px] font-black text-rose-500 uppercase tracking-widest hover:underline">Clear</button>
+                      )}
+                    </div>
+                    <div 
+                      className={`relative aspect-[4/3] rounded-3xl border-2 border-dashed transition-all overflow-hidden flex items-center justify-center bg-slate-50 group/upload ${secondaryImagePreview ? 'border-indigo-600/20' : 'border-slate-200 hover:border-indigo-400'}`}
+                    >
+                      {secondaryImagePreview ? (
+                        <img src={secondaryImagePreview} className="w-full h-full object-cover animate-in fade-in duration-500" alt="Secondary Preview" />
+                      ) : (
+                        <div className="text-center space-y-2">
+                          <Plus size={32} className="text-slate-300 mx-auto group-hover/upload:scale-110 transition-transform" />
+                          <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Add Variation</span>
+                        </div>
+                      )}
+                      <input type="file" onChange={(e) => handleFileChange(e, true)} accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" />
+                    </div>
+                  </div>
                 </div>
               </section>
-            </div>
+
+              {/* Positioning Controls */}
+              <section className="bg-white rounded-[32px] p-8 shadow-sm border border-slate-200/60 space-y-8">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] block">MEDIA BEHAVIOR</label>
+                
+                <div className="space-y-10">
+                  {/* Primary Image position */}
+                  <div className="space-y-6">
+                    <span className="text-[10px] font-black text-slate-900 uppercase tracking-widest block">Primary Image Position</span>
+                    <div className="grid grid-cols-2 gap-2">
+                      {['top', 'bottom', 'left', 'right'].map(pos => (
+                        <button 
+                          key={pos}
+                          type="button"
+                          className={`py-3 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${formData.image_position === pos ? 'bg-slate-900 border-slate-900 text-white shadow-lg' : 'bg-slate-50 border-slate-100 text-slate-400 hover:bg-white hover:border-slate-200'}`}
+                          onClick={() => setFormData({...formData, image_position: pos as any})}
+                        >
+                          {pos}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="space-y-4 pt-2">
+                      <div className="flex justify-between items-center">
+                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Width</span>
+                         <span className="text-xs font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-lg">{formData.image_width}%</span>
+                      </div>
+                      <input 
+                        type="range" min="10" max="100" step="5"
+                        className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                        value={formData.image_width}
+                        onChange={(e) => setFormData({...formData, image_width: e.target.value})}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Secondary Image position — only shown when a secondary image is selected */}
+                  {secondaryImagePreview && (
+                    <div className="space-y-6 pt-4 border-t border-slate-100">
+                      <span className="text-[10px] font-black text-slate-900 uppercase tracking-widest block">Secondary Image Position</span>
+                      <div className="grid grid-cols-2 gap-2">
+                        {['top', 'bottom', 'left', 'right'].map(pos => (
+                          <button 
+                            key={pos}
+                            type="button"
+                            className={`py-3 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${formData.secondary_image_position === pos ? 'bg-slate-900 border-slate-900 text-white shadow-lg' : 'bg-slate-50 border-slate-100 text-slate-400 hover:bg-white hover:border-slate-200'}`}
+                            onClick={() => setFormData({...formData, secondary_image_position: pos as any})}
+                          >
+                            {pos}
+                          </button>
+                        ))}
+                      </div>
+
+                      <div className="space-y-4 pt-2">
+                        <div className="flex justify-between items-center">
+                           <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Width</span>
+                           <span className="text-xs font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-lg">{formData.secondary_image_width}%</span>
+                        </div>
+                        <input 
+                          type="range" min="10" max="100" step="5"
+                          className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                          value={formData.secondary_image_width}
+                          onChange={(e) => setFormData({...formData, secondary_image_width: e.target.value})}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </section>
+
+
+              <div className="bg-indigo-600 rounded-[32px] p-8 text-white space-y-4 relative overflow-hidden">
+                 <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12 blur-2xl" />
+                 <Info size={24} className="text-indigo-200" />
+                 <p className="text-sm font-medium leading-relaxed opacity-90">
+                    Pro Tip: Use <strong className="text-white">Full Code</strong> layout when you want students to focus entirely on the implementation details.
+                 </p>
+              </div>
+
+            </aside>
           </div>
         ) : (
-          <div className="preview-container animate-slideIn">
-            <SlideViewer slides={[{
-              ...formData,
-              id: 999,
-              image: imagePreview || '',
-              secondary_image: secondaryImagePreview || '',
-              image_position: formData.image_position as any,
-              code_position: formData.code_position as any,
-              code_theme: formData.code_theme as any
-            }]} />
+          <div className="max-w-8xl mx-auto p-8 md:p-12 lg:p-16 animate-in slide-in-from-right-10 duration-700 h-full">
+            <div className="bg-white rounded-[48px] shadow-2xl overflow-hidden border border-slate-200 relative aspect-video">
+              <SlideViewer slides={[{
+                ...formData,
+                id: 999,
+                image: imagePreview || '',
+                secondary_image: secondaryImagePreview || '',
+                image_position: formData.image_position as any,
+                secondary_image_position: formData.secondary_image_position as any,
+                secondary_image_width: formData.secondary_image_width,
+                code_position: formData.code_position as any,
+                code_theme: formData.code_theme as any
+              }]} />
+              
+              <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-3 px-6 py-3 bg-slate-900/80 backdrop-blur-xl rounded-2xl text-white border border-white/10">
+                 <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                 <span className="text-[10px] font-black uppercase tracking-[0.2em]">Simulation Active • WYSIWYG Mode</span>
+              </div>
+            </div>
+            
+            <div className="mt-12 flex items-center justify-center gap-12 text-slate-400">
+               <div className="flex flex-col items-center gap-2">
+                  <div className="w-12 h-12 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-slate-300">
+                     <Columns2 size={20} />
+                  </div>
+                  <span className="text-[9px] font-black uppercase tracking-widest">RESPONSIVE COLS</span>
+               </div>
+               <div className="flex flex-col items-center gap-2">
+                  <div className="w-12 h-12 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-slate-300">
+                     <Terminal size={20} />
+                  </div>
+                  <span className="text-[9px] font-black uppercase tracking-widest">LIVE PLAYGROUND</span>
+               </div>
+               <div className="flex flex-col items-center gap-2">
+                  <div className="w-12 h-12 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-slate-300">
+                     <ImageIcon size={20} />
+                  </div>
+                  <span className="text-[9px] font-black uppercase tracking-widest">MEDIA SCALING</span>
+               </div>
+            </div>
           </div>
         )}
       </main>
-
-      <style jsx>{`
-        .studio-page {
-          background: #f1f5f9;
-          min-height: 100vh;
-          display: flex;
-          flex-direction: column;
-          padding: 0;
-        }
-
-        .studio-top-nav {
-          height: 64px;
-          background: white;
-          border-bottom: 1px solid #e2e8f0;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 0 24px;
-          position: sticky;
-          top: 0;
-          z-index: 100;
-        }
-
-        .back-link {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          color: #64748b;
-          font-size: 14px;
-          font-weight: 600;
-          text-decoration: none;
-        }
-
-        .studio-tabs {
-          display: flex;
-          background: #f1f5f9;
-          padding: 4px;
-          border-radius: 10px;
-        }
-
-        .studio-tabs button {
-          padding: 6px 16px;
-          border-radius: 7px;
-          border: none;
-          background: transparent;
-          font-size: 13px;
-          font-weight: 600;
-          color: #64748b;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-
-        .studio-tabs button.active {
-          background: white;
-          color: var(--indigo);
-          box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-
-        .studio-content {
-          flex: 1;
-          padding: 32px;
-          max-width: 1400px;
-          margin: 0 auto;
-          width: 100%;
-        }
-
-        .editor-grid {
-          display: grid;
-          grid-template-columns: 1fr 320px;
-          gap: 32px;
-        }
-
-        .form-section {
-          background: white;
-          border-radius: 20px;
-          padding: 24px;
-          margin-bottom: 24px;
-          border: 1px solid #e2e8f0;
-        }
-
-        .section-label {
-          display: block;
-          font-size: 11px;
-          font-weight: 800;
-          color: #94a3b8;
-          text-transform: uppercase;
-          letter-spacing: 0.1em;
-          margin-bottom: 16px;
-        }
-
-        .title-input {
-          width: 100%;
-          border: none;
-          font-size: 24px;
-          font-weight: 700;
-          color: #0f172a;
-          outline: none;
-          margin-bottom: 16px;
-        }
-
-        .type-badges {
-          display: flex;
-          gap: 8px;
-        }
-
-        .type-badge {
-          padding: 4px 12px;
-          border-radius: 20px;
-          font-size: 10px;
-          font-weight: 700;
-          background: #f1f5f9;
-          color: #64748b;
-          border: 1px solid transparent;
-          cursor: pointer;
-        }
-
-        .type-badge.active {
-          background: rgba(99, 102, 241, 0.1);
-          color: var(--indigo);
-          border-color: rgba(99, 102, 241, 0.2);
-        }
-
-        .layout-selector {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 16px;
-        }
-
-        .layout-card {
-          display: flex;
-          align-items: center;
-          gap: 16px;
-          padding: 16px;
-          border-radius: 16px;
-          border: 2px solid #f1f5f9;
-          background: white;
-          cursor: pointer;
-          text-align: left;
-          position: relative;
-          transition: all 0.2s;
-        }
-
-        .layout-card.active {
-          border-color: var(--indigo);
-          background: rgba(99, 102, 241, 0.02);
-        }
-
-        .layout-icon {
-          width: 44px;
-          height: 44px;
-          background: #f1f5f9;
-          border-radius: 12px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: #64748b;
-        }
-
-        .layout-card.active .layout-icon {
-          background: var(--indigo);
-          color: white;
-        }
-
-        .layout-name {
-          display: block;
-          font-weight: 700;
-          font-size: 14px;
-          color: #1e293b;
-        }
-
-        .layout-desc {
-          display: block;
-          font-size: 11px;
-          color: #94a3b8;
-        }
-
-        .active-check {
-          position: absolute;
-          top: 12px;
-          right: 12px;
-          color: var(--indigo);
-        }
-
-        .section-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-        }
-
-        .editor-toolbar {
-          display: flex;
-          gap: 4px;
-        }
-
-        .editor-toolbar button {
-          padding: 4px 8px;
-          border-radius: 4px;
-          background: #f1f5f9;
-          border: none;
-          font-size: 10px;
-          font-weight: 700;
-          color: #64748b;
-          cursor: pointer;
-        }
-
-        .quill-loader {
-          height: 300px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: #f8fafc;
-          border-radius: 12px;
-          color: #94a3b8;
-          font-weight: 600;
-          font-size: 14px;
-          border: 1px dashed #e2e8f0;
-        }
-
-        .editor-info-badge {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          padding: 4px 10px;
-          background: #f1f5f9;
-          color: #64748b;
-          border-radius: 100px;
-          font-size: 10px;
-          font-weight: 800;
-          letter-spacing: 0.05em;
-        }
-
-        .rich-editor-wrapper :global(.quill) {
-          border-radius: 16px;
-          overflow: hidden;
-          border: 1px solid #e2e8f0;
-        }
-
-        .rich-editor-wrapper :global(.ql-toolbar) {
-          border: none !important;
-          background: #f8fafc;
-          border-bottom: 1px solid #e2e8f0 !important;
-          padding: 12px;
-        }
-
-        .rich-editor-wrapper :global(.ql-container) {
-          border: none !important;
-          min-height: 300px;
-          font-size: 16px;
-          font-family: inherit;
-        }
-
-        .rich-editor-wrapper :global(.ql-editor) {
-          min-height: 300px;
-          padding: 24px;
-          line-height: 1.8;
-          text-align: left;
-        }
-
-        .rich-editor-wrapper :global(.ql-editor.ql-blank::before) {
-          left: 24px;
-          color: #94a3b8;
-          font-style: normal;
-        }
-
-        .content-textarea, .code-textarea {
-          width: 100%;
-          min-height: 200px;
-          border: 1px solid #e2e8f0;
-          border-radius: 12px;
-          padding: 16px;
-          font-size: 15px;
-          line-height: 1.6;
-          outline: none;
-          resize: vertical;
-          font-family: inherit;
-        }
-
-        .code-textarea {
-          background: #0f172a;
-          color: #e2e8f0;
-          font-family: monospace;
-          min-height: 300px;
-        }
-
-        .code-options-bar {
-          display: flex;
-          justify-content: space-between;
-          margin-bottom: 12px;
-        }
-
-        .option-group {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          font-size: 11px;
-          font-weight: 700;
-          color: #94a3b8;
-        }
-
-        .option-group button {
-          padding: 4px 10px;
-          border-radius: 6px;
-          background: #f1f5f9;
-          border: none;
-          font-size: 10px;
-          font-weight: 700;
-          color: #64748b;
-          cursor: pointer;
-        }
-
-        .option-group button.active {
-          background: var(--indigo);
-          color: white;
-        }
-
-        .upload-box {
-          margin-bottom: 20px;
-        }
-
-        .upload-box label {
-          display: block;
-          font-size: 11px;
-          font-weight: 700;
-          color: #64748b;
-          margin-bottom: 8px;
-        }
-
-        .upload-preview {
-          width: 100%;
-          height: 120px;
-          background-size: cover;
-          background-position: center;
-          background-color: white;
-          border-radius: 12px;
-          border: 2px dashed #e2e8f0;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: #cbd5e1;
-          position: relative;
-          overflow: hidden;
-        }
-
-        .upload-preview input {
-          position: absolute;
-          inset: 0;
-          opacity: 0;
-          cursor: pointer;
-        }
-
-        .pos-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 8px;
-          margin-bottom: 16px;
-        }
-
-        .pos-btn {
-          padding: 8px;
-          border-radius: 8px;
-          border: 1px solid #e2e8f0;
-          background: white;
-          font-size: 10px;
-          font-weight: 700;
-          color: #64748b;
-          cursor: pointer;
-        }
-
-        .pos-btn.active {
-          background: #0f172a;
-          color: white;
-          border-color: #0f172a;
-        }
-
-        .width-control {
-          background: white;
-          padding: 12px;
-          border-radius: 12px;
-          border: 1px solid #e2e8f0;
-        }
-
-        .width-header {
-          font-size: 11px;
-          font-weight: 700;
-          color: #64748b;
-          margin-bottom: 8px;
-        }
-
-        .preview-container {
-          max-width: 1100px;
-          margin: 0 auto;
-        }
-      `}</style>
     </div>
   );
 }

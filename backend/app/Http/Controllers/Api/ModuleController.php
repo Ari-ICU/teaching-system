@@ -305,6 +305,7 @@ class ModuleController extends Controller
                                 'code_position'  => $sData['code_position'] ?? 'right',
                                 'image_position' => $sData['image_position'] ?? 'top',
                                 'image_width'    => $sData['image_width'] ?? '100',
+                                'layout_type'    => $sData['layout_type'] ?? 'standard',
                                 'order'          => $sData['order'] ?? $sIndex,
                             ]);
                         }

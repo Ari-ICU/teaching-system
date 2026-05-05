@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { UserPlus, Mail, Lock, User as UserIcon, AlertCircle, Shield, Plus } from "lucide-react";
+import { UserPlus, Mail, Lock, User as UserIcon, AlertCircle, Shield, Plus, GraduationCap, CheckCircle2, ChevronRight, Loader2 } from "lucide-react";
 import DropdownSelect from "@/components/ui/DropdownSelect";
 
 export default function RegisterPage() {
@@ -83,177 +83,163 @@ export default function RegisterPage() {
   };
 
   return (
-    <div style={{ display: 'flex', minHeight: '90vh', alignItems: 'center', justifyContent: 'center', padding: '40px 20px' }}>
-      <div className="glass-card animate-fadeInUp" style={{ width: '100%', maxWidth: '450px', padding: '40px' }}>
-        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <div style={{ width: '64px', height: '64px', background: 'var(--gradient-brand)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', color: 'white', boxShadow: 'var(--shadow-lg)' }}>
-            <UserPlus size={32} />
-          </div>
-          <h1 style={{ fontSize: '24px', fontWeight: 800, color: 'var(--text-primary)' }}>Create Account</h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginTop: '8px' }}>Join the teaching platform today</p>
-        </div>
+    <div className="min-h-screen flex items-center justify-center p-6 md:p-10 bg-slate-50 relative overflow-hidden">
+      {/* Background Orbs */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-500/5 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/3" />
+      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-indigo-600/5 rounded-full blur-[120px] translate-y-1/2 -translate-x-1/3" />
 
-        {error && (
-          <div style={{ padding: '12px 16px', background: '#fee2e2', color: '#dc2626', borderRadius: 'var(--radius-md)', marginBottom: '24px', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '10px', border: '1px solid #fecaca' }}>
-            <AlertCircle size={18} />
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div>
-            <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)' }}>Full Name</label>
-            <div style={{ position: 'relative' }}>
-              <UserIcon style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} size={18} />
-              <input 
-                type="text" 
-                required 
-                className="url-input" 
-                style={{ width: '100%', paddingLeft: '44px', height: '48px', background: 'white' }}
-                placeholder="John Doe"
-                value={formData.name}
-                onChange={(e) => setFormData({...formData, name: e.target.value})}
-              />
+      <div className="w-full max-w-[550px] relative z-10 animate-in fade-in slide-in-from-bottom-8 duration-700">
+        <div className="bg-white border border-slate-200 rounded-[48px] shadow-2xl p-10 md:p-14 overflow-hidden relative">
+          <header className="text-center mb-12">
+            <div className="w-16 h-16 bg-indigo-600 rounded-[20px] flex items-center justify-center mx-auto mb-6 shadow-xl shadow-indigo-600/20 text-white transform hover:rotate-6 transition-transform duration-300">
+              <UserPlus size={32} strokeWidth={2.5} />
             </div>
-          </div>
+            <h1 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight mb-3">Create Account</h1>
+            <p className="text-slate-500 font-medium">Join the premium teaching platform today.</p>
+          </header>
 
-          <div>
-            <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)' }}>Email Address</label>
-            <div style={{ position: 'relative' }}>
-              <Mail style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} size={18} />
-              <input 
-                type="email" 
-                required 
-                className="url-input" 
-                style={{ width: '100%', paddingLeft: '44px', height: '48px', background: 'white' }}
-                placeholder="teacher@example.com"
-                value={formData.email}
-                onChange={(e) => setFormData({...formData, email: e.target.value})}
-              />
-            </div>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-            <div>
-              <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)' }}>Role</label>
-              <div style={{ position: 'relative' }}>
-                <Shield style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', zIndex: 10 }} size={18} />
-                <DropdownSelect 
-                  options={[
-                    { value: "student", label: "Student" },
-                    { value: "teacher", label: "Teacher" }
-                  ]}
-                  value={formData.role}
-                  onChange={(value) => setFormData({...formData, role: value})}
-                  style={{ paddingLeft: '44px', height: '48px' }}
-                />
-              </div>
-            </div>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
-            <div>
-              <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)' }}>Password</label>
-              <div style={{ position: 'relative' }}>
-                <Lock style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} size={18} />
-                <input 
-                  type="password" 
-                  required 
-                  className="url-input" 
-                  style={{ width: '100%', paddingLeft: '44px', height: '48px', background: 'white' }}
-                  placeholder="••••••••"
-                  value={formData.password}
-                  onChange={(e) => setFormData({...formData, password: e.target.value})}
-                />
-              </div>
-            </div>
-            <div>
-              <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)' }}>Confirm</label>
-              <div style={{ position: 'relative' }}>
-                <Lock style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} size={18} />
-                <input 
-                  type="password" 
-                  required 
-                  className="url-input" 
-                  style={{ width: '100%', paddingLeft: '44px', height: '48px', background: 'white' }}
-                  placeholder="••••••••"
-                  value={formData.password_confirmation}
-                  onChange={(e) => setFormData({...formData, password_confirmation: e.target.value})}
-                />
-              </div>
-            </div>
-          </div>
-
-          {formData.role === 'student' && (
-            <div style={{ marginTop: '8px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                <label style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>Select Your Courses (Packages)</label>
-                <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>{formData.course_ids.length} selected</span>
-              </div>
-              
-              <div style={{ 
-                maxHeight: '240px', 
-                overflowY: 'auto', 
-                paddingRight: '8px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '8px',
-                padding: '4px'
-              }} className="custom-scrollbar">
-                {courses.map(course => (
-                  <div 
-                    key={course.id} 
-                    onClick={() => handleCourseToggle(course.id)}
-                    style={{ 
-                      padding: '10px 14px', 
-                      borderRadius: '12px', 
-                      border: '1px solid',
-                      borderColor: formData.course_ids.includes(course.id) ? 'var(--indigo)' : 'var(--border)',
-                      background: formData.course_ids.includes(course.id) ? 'var(--indigo-light)05' : 'white',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                      boxShadow: formData.course_ids.includes(course.id) ? '0 4px 12px rgba(99, 102, 241, 0.08)' : 'none'
-                    }}
-                  >
-                    <div style={{ 
-                      width: '20px', 
-                      height: '20px', 
-                      borderRadius: '6px', 
-                      border: '2px solid',
-                      borderColor: formData.course_ids.includes(course.id) ? 'var(--indigo)' : '#d1d5db',
-                      background: formData.course_ids.includes(course.id) ? 'var(--indigo)' : 'transparent',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flexShrink: 0
-                    }}>
-                      {formData.course_ids.includes(course.id) && <Plus size={14} color="white" style={{ transform: 'rotate(45deg)' }} />}
-                    </div>
-                    <div style={{ textAlign: 'left', minWidth: 0 }}>
-                      <div style={{ fontSize: '13.5px', fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{course.title}</div>
-                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{course.description || 'Professional learning path'}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+          {error && (
+            <div className="flex items-center gap-3 p-4 bg-rose-50 border border-rose-100 rounded-2xl text-rose-600 text-sm font-bold mb-8 animate-in shake duration-500">
+              <AlertCircle size={20} />
+              {error}
             </div>
           )}
 
-          <button 
-            type="submit" 
-            className="btn btn-primary" 
-            style={{ height: '48px', fontSize: '16px', fontWeight: 600, marginTop: '12px' }}
-            disabled={isLoading}
-          >
-            {isLoading ? "Creating account..." : "Create Account"}
-          </button>
-        </form>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-sm font-black text-slate-900 ml-1 uppercase tracking-wider">Full Name</label>
+                <div className="relative group">
+                  <UserIcon className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" size={20} />
+                  <input 
+                    type="text" 
+                    required 
+                    className="w-full h-14 pl-14 pr-6 bg-slate-50 border-none rounded-2xl text-slate-900 font-bold focus:ring-4 focus:ring-indigo-500/10 transition-all placeholder:text-slate-400" 
+                    placeholder="John Doe"
+                    value={formData.name}
+                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  />
+                </div>
+              </div>
 
-        <div style={{ marginTop: '32px', textAlign: 'center', fontSize: '14px', color: 'var(--text-muted)' }}>
-          Already have an account? <Link href="/login" style={{ color: 'var(--indigo)', fontWeight: 600 }}>Sign In</Link>
+              <div className="space-y-2">
+                <label className="text-sm font-black text-slate-900 ml-1 uppercase tracking-wider">Role</label>
+                <div className="relative group">
+                  <Shield className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 z-10" size={20} />
+                  <DropdownSelect 
+                    options={[
+                      { value: "student", label: "Student" },
+                      { value: "teacher", label: "Teacher" }
+                    ]}
+                    value={formData.role}
+                    onChange={(value) => setFormData({...formData, role: value})}
+                    // The component already has its own styles, we just need to ensure alignment
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-black text-slate-900 ml-1 uppercase tracking-wider">Email Address</label>
+              <div className="relative group">
+                <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" size={20} />
+                <input 
+                  type="email" 
+                  required 
+                  className="w-full h-14 pl-14 pr-6 bg-slate-50 border-none rounded-2xl text-slate-900 font-bold focus:ring-4 focus:ring-indigo-500/10 transition-all placeholder:text-slate-400" 
+                  placeholder="teacher@example.com"
+                  value={formData.email}
+                  onChange={(e) => setFormData({...formData, email: e.target.value})}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-sm font-black text-slate-900 ml-1 uppercase tracking-wider">Password</label>
+                <div className="relative group">
+                  <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" size={20} />
+                  <input 
+                    type="password" 
+                    required 
+                    className="w-full h-14 pl-14 pr-6 bg-slate-50 border-none rounded-2xl text-slate-900 font-bold focus:ring-4 focus:ring-indigo-500/10 transition-all placeholder:text-slate-400" 
+                    placeholder="••••••••"
+                    value={formData.password}
+                    onChange={(e) => setFormData({...formData, password: e.target.value})}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-black text-slate-900 ml-1 uppercase tracking-wider">Confirm</label>
+                <div className="relative group">
+                  <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" size={20} />
+                  <input 
+                    type="password" 
+                    required 
+                    className="w-full h-14 pl-14 pr-6 bg-slate-50 border-none rounded-2xl text-slate-900 font-bold focus:ring-4 focus:ring-indigo-500/10 transition-all placeholder:text-slate-400" 
+                    placeholder="••••••••"
+                    value={formData.password_confirmation}
+                    onChange={(e) => setFormData({...formData, password_confirmation: e.target.value})}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {formData.role === 'student' && (
+              <div className="space-y-4 pt-2">
+                <div className="flex justify-between items-center px-1">
+                  <label className="text-xs font-black text-slate-900 uppercase tracking-widest">Select Course Paths</label>
+                  <span className="text-[10px] font-black text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded-full">{formData.course_ids.length} SELECTED</span>
+                </div>
+                
+                <div className="max-h-48 overflow-y-auto pr-2 space-y-2 scrollbar-thin scrollbar-thumb-indigo-100 scrollbar-track-transparent">
+                  {courses.map((course, cIdx) => {
+                    const isSelected = formData.course_ids.includes(course.id);
+                    return (
+                      <div 
+                        key={course.id} 
+                        onClick={() => handleCourseToggle(course.id)}
+                        className={`
+                          group/course p-4 rounded-2xl border transition-all duration-300 cursor-pointer flex items-center gap-4
+                          ${isSelected ? 'bg-indigo-50 border-indigo-200 shadow-sm' : 'bg-slate-50 border-transparent hover:bg-slate-100'}
+                        `}
+                      >
+                        <div className={`
+                          w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all duration-300 shrink-0
+                          ${isSelected ? 'bg-indigo-600 border-indigo-600 shadow-lg shadow-indigo-600/20' : 'bg-white border-slate-200'}
+                        `}>
+                          {isSelected && <CheckCircle2 size={14} className="text-white" />}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="text-sm font-bold text-slate-900 truncate group-hover/course:text-indigo-600 transition-colors">{course.title}</div>
+                          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{course.slug || 'Specialized Path'}</div>
+                        </div>
+                        <ChevronRight className={`ml-auto text-slate-300 transition-all duration-300 ${isSelected ? 'translate-x-1 text-indigo-400' : 'opacity-0'}`} size={16} />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            <button 
+              type="submit" 
+              className="w-full h-16 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-[20px] shadow-xl shadow-indigo-600/20 transition-all flex items-center justify-center gap-3 text-lg disabled:opacity-50 disabled:cursor-not-allowed mt-4 group"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <><Loader2 className="animate-spin" size={24} /> Creating Account...</>
+              ) : (
+                <>Create Account <ChevronRight className="group-hover:translate-x-1 transition-transform" size={24} /></>
+              )}
+            </button>
+          </form>
+
+          <div className="mt-10 text-center">
+            <p className="text-slate-500 font-medium">
+              Already have an account? <Link href="/login" className="text-indigo-600 font-black hover:text-indigo-700 transition-colors">Sign In</Link>
+            </p>
+          </div>
         </div>
       </div>
     </div>

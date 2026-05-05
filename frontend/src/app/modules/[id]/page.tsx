@@ -3,7 +3,7 @@
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Clock, BarChart, PlayCircle, AlertCircle } from "lucide-react";
+import { ArrowLeft, Clock, BarChart, PlayCircle, AlertCircle, Layout, ChevronRight } from "lucide-react";
 import ModuleIcon from "@/components/ModuleIcon";
 import CourseRoadmap from "@/components/CourseRoadmap";
 import { useAuth } from "@/context/AuthContext";
@@ -68,140 +68,114 @@ export default function ModulePage({ params }: { params: Promise<{ id: string }>
 
   if (error) {
     return (
-      <div className="page" style={{ textAlign: 'center', paddingTop: '100px' }}>
-        <div className="glass-card" style={{ maxWidth: '500px', margin: '0 auto', padding: '40px' }}>
-          <AlertCircle size={48} color="var(--rose)" style={{ marginBottom: '20px' }} />
-          <h2 style={{ marginBottom: '12px' }}>Access Denied</h2>
-          <p style={{ color: 'var(--text-secondary)', marginBottom: '24px' }}>{error}</p>
-          <Link href="/" className="btn btn-primary">Back to Dashboard</Link>
+      <div className="min-h-screen flex items-center justify-center p-6 bg-slate-50">
+        <div className="bg-white border border-slate-200 rounded-[32px] p-12 text-center shadow-xl max-w-md w-full">
+          <div className="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center mx-auto mb-6 text-rose-500">
+            <AlertCircle size={32} />
+          </div>
+          <h2 className="text-2xl font-extrabold text-slate-900 mb-3 tracking-tight">Access Denied</h2>
+          <p className="text-slate-500 mb-8 leading-relaxed font-medium">{error}</p>
+          <Link href="/" className="inline-flex items-center justify-center px-8 py-3.5 bg-indigo-600 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/20 hover:bg-indigo-700 transition-all">
+            Back to Dashboard
+          </Link>
         </div>
       </div>
     );
   }
 
-  if (!moduleData) return <div className="page">Module not found.</div>;
+  if (!moduleData) return <div className="p-12 text-center text-slate-500 font-medium">Module not found.</div>;
 
   return (
-    <div className="module-page-container">
-      <div className="module-main-content">
-        <Link href="/modules" className="btn btn-ghost" style={{ marginBottom: '24px' }}>
+    <div className="flex flex-col lg:flex-row min-h-screen bg-gradient-to-br from-slate-50 to-white">
+      <div className="flex-1 p-6 md:p-10 lg:p-12 min-w-0">
+        <Link href="/modules" className="inline-flex items-center gap-2 px-4 py-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors mb-8 font-medium">
           <ArrowLeft size={16} /> Back to Modules
         </Link>
 
-        <header className="page-header glass-card" style={{ padding: '40px', borderTop: `4px solid ${moduleData.color}`, background: `linear-gradient(135deg, white, ${moduleData.color}05)` }}>
-          <div className="module-header-info">
-            <div className="module-header-icon-wrapper" style={{ background: `${moduleData.color}15`, border: `1px solid ${moduleData.color}20` }}>
-              <ModuleIcon icon={moduleData.icon} size={36} color={moduleData.color} />
+        <header 
+          className="bg-white border border-slate-200 rounded-[32px] p-8 md:p-12 shadow-sm relative overflow-hidden group"
+          style={{ borderTopWidth: '4px', borderTopColor: moduleData.color }}
+        >
+          {/* Subtle Background Pattern */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50/20 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl pointer-events-none" />
+          
+          <div className="relative flex flex-col md:flex-row items-center gap-8">
+            <div className={`w-20 h-20 md:w-24 md:h-24 rounded-3xl flex items-center justify-center shrink-0 shadow-lg group-hover:scale-105 transition-transform duration-500`} style={{ backgroundColor: `${moduleData.color}15`, border: `1px solid ${moduleData.color}20` }}>
+              <ModuleIcon icon={moduleData.icon} size={40} color={moduleData.color} />
             </div>
-            <div>
-              <h1 className="page-title" style={{ fontSize: '32px', fontWeight: 800, letterSpacing: '-0.02em' }}>{moduleData.title}</h1>
-              <p className="page-subtitle" style={{ fontSize: '16px', marginTop: '4px', opacity: 0.8 }}>{moduleData.description}</p>
+            <div className="text-center md:text-left space-y-2">
+              <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight">{moduleData.title}</h1>
+              <p className="text-slate-500 text-lg leading-relaxed max-w-2xl font-medium">
+                {moduleData.description}
+              </p>
             </div>
           </div>
         </header>
 
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '48px', marginBottom: '24px' }}>
-          <h2 style={{ fontSize: '22px', fontWeight: 800, letterSpacing: '-0.01em' }}>Curriculum Lessons</h2>
-          <div className="badge badge-indigo">{moduleData.lessons?.length || 0} Total Lessons</div>
+        <div className="flex items-center justify-between mt-12 mb-8">
+          <div className="flex items-center gap-3">
+            <div className="w-1 h-6 bg-indigo-500 rounded-full" />
+            <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">Curriculum Lessons</h2>
+          </div>
+          <span className="px-3 py-1 bg-indigo-50 text-indigo-600 text-[11px] font-black rounded-full uppercase tracking-wider">
+            {moduleData.lessons?.length || 0} Lessons
+          </span>
         </div>
 
-        <div className="grid-2">
+        <div className={`grid grid-cols-1 ${moduleData.course ? '2xl:grid-cols-2' : 'lg:grid-cols-2'} gap-6`}>
           {moduleData.lessons?.map((lesson: any, index: number) => (
-            <div key={lesson.id} className="glass-card animate-fadeInUp" style={{ padding: '28px', animationDelay: `${index * 0.1}s`, borderBottom: `2px solid transparent`, transition: 'all 0.3s' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
-                <div>
-                  <span className={`badge badge-${lesson.difficulty === 'beginner' ? 'emerald' : lesson.difficulty === 'intermediate' ? 'amber' : 'rose'}`} style={{ marginBottom: '10px' }}>
-                    {lesson.difficulty.toUpperCase()}
+            <div 
+              key={lesson.id} 
+              className="group bg-white border border-slate-200 rounded-[28px] p-8 shadow-sm hover:shadow-xl hover:border-indigo-500/20 transition-all duration-300 animate-in fade-in slide-in-from-bottom-4"
+              style={{ animationDelay: `${index * 100}ms` }}
+            >
+              <div className="flex flex-col h-full">
+                <div className="mb-4">
+                  <span className={`
+                    inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold tracking-widest mb-3 uppercase
+                    ${lesson.difficulty === 'beginner' ? 'bg-emerald-50 text-emerald-600' : 
+                      lesson.difficulty === 'intermediate' ? 'bg-amber-50 text-amber-600' : 'bg-rose-50 text-rose-600'}
+                  `}>
+                    {lesson.difficulty}
                   </span>
-                  <h3 style={{ fontSize: '19px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>
+                  <h3 className="text-xl font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">
                     {index + 1}. {lesson.title}
                   </h3>
                 </div>
-              </div>
 
-              <p style={{ color: 'var(--text-secondary)', fontSize: '14.5px', lineHeight: '1.6', marginBottom: '28px', minHeight: '44px' }}>
-                {lesson.description}
-              </p>
+                <p className="text-slate-500 text-sm leading-relaxed mb-8 flex-1">
+                  {lesson.description}
+                </p>
 
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid var(--border)', paddingTop: '20px' }}>
-                <div style={{ display: 'flex', gap: '20px', color: 'var(--text-muted)', fontSize: '13px', fontWeight: 500 }}>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <Clock size={15} /> {lesson.duration || '45 min'}
-                  </span>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <BarChart size={15} /> {lesson.difficulty}
-                  </span>
+                <div className="flex items-center justify-between pt-6 border-t border-slate-100">
+                  <div className="flex gap-4 text-xs font-bold text-slate-400">
+                    <span className="flex items-center gap-1.5">
+                      <Clock size={14} className="text-indigo-400" /> {lesson.duration || '45 min'}
+                    </span>
+                    <span className="flex items-center gap-1.5 capitalize">
+                      <BarChart size={14} className="text-indigo-400" /> {lesson.difficulty}
+                    </span>
+                  </div>
+
+                  <Link 
+                    href={`/lessons/${lesson.id}`} 
+                    className="inline-flex items-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/20 hover:-translate-y-0.5 transition-all"
+                  >
+                    <PlayCircle size={18} /> Start
+                  </Link>
                 </div>
-
-                <Link href={`/lessons/${lesson.id}`} className="btn btn-primary" style={{ boxShadow: 'var(--shadow-indigo)' }}>
-                  <PlayCircle size={18} /> Start
-                </Link>
               </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Specialized Roadmap Aside */}
-      <CourseRoadmap course={moduleData.course} />
-
-      <style jsx>{`
-        .module-page-container {
-          display: flex;
-          gap: 0;
-          align-items: flex-start;
-          width: 100%;
-          min-height: 100vh;
-          background: linear-gradient(135deg, #f8faff 0%, #ffffff 100%);
-        }
-
-        .module-main-content {
-          flex: 1;
-          padding: 40px;
-          min-width: 0;
-        }
-
-        .module-header-info {
-          display: flex;
-          align-items: center;
-          gap: 24px;
-        }
-
-        .module-header-icon-wrapper {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 72px;
-          height: 72px;
-          border-radius: 20px;
-          flex-shrink: 0;
-          box-shadow: 0 8px 16px rgba(0,0,0,0.05);
-        }
-
-        @media (max-width: 1200px) {
-          .module-page-container {
-            flex-direction: column;
-          }
-
-          .module-main-content {
-            width: 100%;
-            padding: 30px 20px;
-          }
-        }
-
-        @media (max-width: 640px) {
-          .module-header-info {
-            flex-direction: column;
-            align-items: flex-start;
-          }
-
-          .module-header-icon-wrapper {
-            width: 60px;
-            height: 60px;
-            border-radius: 16px;
-          }
-        }
-      `}</style>
+      {/* Specialized Roadmap Aside - Only render container if course exists */}
+      {moduleData.course && (
+        <div className="w-full lg:w-[350px] xl:w-[400px] shrink-0 border-l border-slate-200 bg-white/50">
+          <CourseRoadmap course={moduleData.course} />
+        </div>
+      )}
     </div>
   );
 }

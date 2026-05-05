@@ -9,7 +9,9 @@ RUN apk add --no-cache \
     zip \
     unzip \
     postgresql-dev \
-    oniguruma-dev
+    oniguruma-dev \
+    linux-headers \
+    icu-dev
 
 # Install PHP extensions
 RUN docker-php-ext-install \
@@ -21,7 +23,8 @@ RUN docker-php-ext-install \
     pcntl \
     bcmath \
     gd \
-    xml
+    xml \
+    intl
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -31,13 +34,14 @@ WORKDIR /var/www/backend
 # Copy composer files first for caching
 COPY backend/composer.json backend/composer.lock* ./
 
-RUN composer install --no-scripts --no-autoloader --no-interaction 2>/dev/null || true
+RUN composer install --no-scripts --no-autoloader --no-interaction --ignore-platform-reqs
 
 COPY backend .
 
-RUN composer dump-autoload --optimize 2>/dev/null || true
+RUN composer dump-autoload --optimize
 
-RUN chown -R www-data:www-data /var/www/backend/storage /var/www/backend/bootstrap/cache 2>/dev/null || true
+# Set permissions
+RUN chown -R www-data:www-data /var/www/backend/storage /var/www/backend/bootstrap/cache
 
 EXPOSE 9000
 CMD ["php-fpm"]

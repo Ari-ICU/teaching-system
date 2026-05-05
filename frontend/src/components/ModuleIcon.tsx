@@ -11,6 +11,7 @@ import {
   Lock,
   Layout,
   Cpu,
+  GraduationCap,
   type LucideIcon,
 } from "lucide-react";
 
@@ -21,6 +22,9 @@ const ICON_MAP: Record<string, LucideIcon> = {
   "⚡": Zap,
   "🔺": Triangle,
   "🔴": Server,
+  "🛠️": Code2,
+  "📦": Layout,
+  "💻": Cpu,
   // extras in case backend adds more
   globe: Globe,
   palette: Palette,
@@ -34,6 +38,10 @@ const ICON_MAP: Record<string, LucideIcon> = {
   lock: Lock,
   layout: Layout,
   cpu: Cpu,
+  layers: Layout,
+  terminal: Server,
+  box: Layout,
+  graduation: GraduationCap,
 };
 
 const DEFAULT_ICON = BookOpen;
@@ -55,8 +63,7 @@ export default function ModuleIcon({ icon, imageUrl, size = 28, color = "white",
       <img 
         src={fullUrl} 
         alt="Module icon" 
-        style={{ width: '100%', height: '100%', objectFit: 'contain' }} 
-        className={className}
+        className={`w-full h-full object-contain ${className || ""}`}
       />
     );
   }

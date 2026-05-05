@@ -2,7 +2,7 @@
 
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
-import { ArrowLeft, Save, Loader2, AlertCircle, CheckCircle2, Layout } from "lucide-react";
+import { ArrowLeft, Save, Loader2, AlertCircle, CheckCircle2, Layout, ImageIcon, ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import DropdownSelect from "@/components/ui/DropdownSelect";
@@ -143,155 +143,199 @@ export default function EditModulePage({ params }: { params: Promise<{ id: strin
     }
   };
 
-  if (authLoading) return null;
+  if (authLoading || status === "loading_initial") return (
+    <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <Loader2 className="animate-spin text-indigo-500" size={32} />
+    </div>
+  );
 
   if (status === "not_found") {
     return (
-      <div className="page" style={{ textAlign: 'center', padding: '100px' }}>
-        <AlertCircle size={64} color="var(--rose)" style={{ margin: '0 auto 20px' }} />
-        <h2 style={{ fontSize: '24px', fontWeight: 800 }}>Module Not Found</h2>
-        <Link href="/admin/modules" className="btn btn-primary" style={{ marginTop: '32px' }}>Back to Modules</Link>
+      <div className="min-h-[60vh] flex flex-col items-center justify-center p-10 text-center space-y-6">
+        <div className="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center text-rose-500">
+          <AlertCircle size={40} />
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-3xl font-black text-slate-900">Module Not Found</h2>
+          <p className="text-slate-500 font-medium">The chapter you're looking for doesn't exist or has been removed.</p>
+        </div>
+        <Link href="/admin/modules" className="inline-flex items-center justify-center px-8 py-3 bg-indigo-600 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/20 hover:bg-indigo-700 transition-all">
+          Back to Modules
+        </Link>
       </div>
     );
   }
 
   return (
-    <div className="page" style={{ maxWidth: '850px', margin: '0 auto' }}>
+    <div className="p-6 md:p-10 lg:p-12 max-w-[1000px] mx-auto space-y-10">
       <Toast show={showToast} message="Module updated successfully!" onClose={() => setShowToast(false)} />
-      <Link href="/admin/modules" className="btn btn-ghost" style={{ marginBottom: '24px' }}>
+      
+      <Link href="/admin/modules" className="inline-flex items-center gap-2 px-4 py-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors font-medium mb-4">
         <ArrowLeft size={16} /> Back to Modules
       </Link>
 
-      <header className="page-header" style={{ marginBottom: '40px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-           <Save size={24} color="var(--indigo)" />
-           <span className="badge badge-indigo">EDIT CHAPTER</span>
+      <header className="space-y-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
+             <Save size={22} />
+          </div>
+          <span className="px-3 py-1 bg-indigo-50 text-indigo-600 text-[10px] font-black rounded-full border border-indigo-100 uppercase tracking-widest">
+            EDIT CHAPTER
+          </span>
         </div>
-        <h1 className="page-title" style={{ fontSize: '32px' }}>Edit Module Settings</h1>
-        <p className="page-subtitle">Update chapter details and manage which courses it belongs to.</p>
+        <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">Edit Module Settings</h1>
+        <p className="text-slate-500 text-lg font-medium">Update chapter details and manage which courses it belongs to.</p>
       </header>
 
-      <form className="glass-card" style={{ padding: '40px', background: 'white' }} onSubmit={handleSubmit}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+      <form className="bg-white border border-slate-200 rounded-[48px] p-10 md:p-14 shadow-sm animate-in fade-in slide-in-from-bottom-8 duration-700" onSubmit={handleSubmit}>
+        <div className="space-y-10">
           
           {/* Module Logo Upload */}
-          <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start', padding: '20px', background: 'var(--bg-secondary)', borderRadius: '16px' }}>
-            <div style={{ 
-              width: '80px', 
-              height: '80px', 
-              borderRadius: '16px', 
-              background: 'white', 
-              border: '2px dashed var(--border)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              overflow: 'hidden',
-              flexShrink: 0
-            }}>
-              {imagePreview ? (
-                <img src={imagePreview} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '8px' }} />
-              ) : currentImage ? (
-                <img src={currentImage} alt="Current" style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '8px' }} />
-              ) : (
-                <Layout size={24} color="var(--text-muted)" style={{ opacity: 0.5 }} />
-              )}
+          <div className="flex flex-col md:flex-row gap-8 items-start bg-slate-50/50 p-8 rounded-[32px] border border-slate-100">
+            <div className="relative group shrink-0">
+              <div className="absolute inset-0 bg-white rounded-2xl blur-lg transition-all group-hover:blur-xl" />
+              <div className="relative w-24 h-24 rounded-2xl bg-white border-2 border-dashed border-slate-200 flex items-center justify-center overflow-hidden transition-colors group-hover:border-indigo-300">
+                {imagePreview ? (
+                  <img src={imagePreview} alt="Preview" className="w-full h-full object-contain p-4" />
+                ) : currentImage ? (
+                  <img src={currentImage} alt="Current" className="w-full h-full object-contain p-4" />
+                ) : (
+                  <Layout size={32} className="text-slate-300 group-hover:text-indigo-400 transition-colors" />
+                )}
+                <input type="file" accept="image/*" onChange={handleImageChange} className="absolute inset-0 opacity-0 cursor-pointer z-10" id="module-logo" />
+              </div>
             </div>
-            <div style={{ flex: 1 }}>
-              <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: 700, color: 'var(--text-muted)' }}>MODULE LOGO</label>
-              <input type="file" accept="image/*" onChange={handleImageChange} style={{ display: 'none' }} id="module-logo" />
-              <label htmlFor="module-logo" className="btn btn-ghost" style={{ border: '1px solid var(--border)', background: 'white', padding: '8px 16px', fontSize: '12px', cursor: 'pointer' }}>
-                Change Image
+            
+            <div className="flex-1 space-y-4">
+              <div>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">VISUAL IDENTITY</label>
+                <h3 className="text-lg font-bold text-slate-900">Module Icon</h3>
+                <p className="text-slate-500 text-sm font-medium leading-relaxed max-w-sm">
+                  Recommended: PNG with transparent background. This represents the module in the student view.
+                </p>
+              </div>
+              <label htmlFor="module-logo" className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl text-xs hover:bg-slate-50 hover:border-slate-300 transition-all cursor-pointer shadow-sm">
+                <ImageIcon size={14} /> Change Custom Icon
               </label>
-              <p style={{ marginTop: '8px', fontSize: '11px', color: 'var(--text-muted)' }}>
-                Upload a logo for this module. Recommended: PNG with transparent background.
-              </p>
             </div>
           </div>
 
-          <div>
-            <label style={{ display: 'block', marginBottom: '10px', fontSize: '14px', fontWeight: 700 }}>Module Title</label>
-            <input 
-              type="text" required className="url-input" 
-              placeholder="e.g. Authentication Basics"
-              style={{ width: '100%', padding: '14px' }}
-              value={formData.title}
-              onChange={(e) => setFormData({...formData, title: e.target.value})}
-            />
-          </div>
-
-          <div>
-            <label style={{ display: 'block', marginBottom: '12px', fontSize: '14px', fontWeight: 700 }}>Parent Courses (Select all that apply)</label>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '12px' }}>
-               {courses.map(course => (
-                 <div key={course.id} onClick={() => toggleCourse(course.id.toString())} className="glass-card" 
-                    style={{ padding: '12px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px',
-                      border: formData.course_ids.includes(course.id.toString()) ? '2px solid var(--indigo)' : '1px solid var(--border)',
-                      background: formData.course_ids.includes(course.id.toString()) ? 'var(--indigo-light)05' : 'transparent',
-                      transition: 'all 0.2s' }}>
-                    <div style={{ width: '20px', height: '20px', borderRadius: '6px', border: '2px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      background: formData.course_ids.includes(course.id.toString()) ? 'var(--indigo)' : 'white',
-                      borderColor: formData.course_ids.includes(course.id.toString()) ? 'var(--indigo)' : 'var(--border)' }}>
-                       {formData.course_ids.includes(course.id.toString()) && <CheckCircle2 size={14} color="white" />}
-                    </div>
-                    <span style={{ fontSize: '14px', fontWeight: 600 }}>{course.title}</span>
-                 </div>
-               ))}
-            </div>
-          </div>
-
-          <div>
-            <label style={{ display: 'block', marginBottom: '10px', fontSize: '14px', fontWeight: 700 }}>Description</label>
-            <textarea required className="url-input" 
-              placeholder="Provide a brief overview of what students will learn in this module..."
-              style={{ width: '100%', minHeight: '100px', resize: 'vertical', padding: '16px', lineHeight: '1.6' }}
-              value={formData.description}
-              onChange={(e) => setFormData({...formData, description: e.target.value})}
-            />
-          </div>
-
-          <div className="grid-2">
-            <div>
-              <label style={{ display: 'block', marginBottom: '10px', fontSize: '14px', fontWeight: 700 }}>Visual Icon (Fallback)</label>
-              <DropdownSelect 
-                options={[
-                  { value: "globe", label: "Globe (Web)" },
-                  { value: "palette", label: "Palette (CSS)" },
-                  { value: "zap", label: "Zap (JS)" },
-                  { value: "server", label: "Server (Backend)" },
-                  { value: "database", label: "Database" },
-                  { value: "code", label: "Code" },
-                  { value: "layers", label: "Layers" },
-                  { value: "shield", label: "Shield (Auth)" }
-                ]}
-                value={formData.icon}
-                onChange={(value) => setFormData({...formData, icon: value})}
+          <div className="space-y-8">
+            <div className="space-y-3">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">MODULE TITLE</label>
+              <input 
+                type="text" required 
+                className="w-full h-16 px-6 bg-slate-50 border-none rounded-2xl text-slate-900 text-xl font-bold focus:ring-4 focus:ring-indigo-500/10 transition-all placeholder:text-slate-300"
+                placeholder="e.g. Authentication Basics"
+                value={formData.title}
+                onChange={(e) => setFormData({...formData, title: e.target.value})}
               />
-              <p style={{ marginTop: '8px', fontSize: '11px', color: 'var(--text-muted)' }}>Used if no image logo is uploaded.</p>
             </div>
-            <div>
-              <label style={{ display: 'block', marginBottom: '10px', fontSize: '14px', fontWeight: 700 }}>Module Theme Color</label>
-              <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                <input type="color" value={formData.color} onChange={(e) => setFormData({...formData, color: e.target.value})}
-                  style={{ width: '56px', height: '48px', padding: '4px', cursor: 'pointer', borderRadius: '12px', border: '1px solid var(--border)' }} />
-                <input type="text" className="url-input" value={formData.color} onChange={(e) => setFormData({...formData, color: e.target.value})}
-                  style={{ flex: 1, padding: '14px', fontFamily: 'monospace' }} />
+
+            <div className="space-y-4">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 block">PARENT COURSES (SELECT ALL THAT APPLY)</label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                 {courses.map(course => {
+                   const isSelected = formData.course_ids.includes(course.id.toString());
+                   return (
+                     <div 
+                        key={course.id} 
+                        onClick={() => toggleCourse(course.id.toString())} 
+                        className={`
+                          group p-5 rounded-2xl cursor-pointer flex items-center gap-4 transition-all duration-300 border-2
+                          ${isSelected ? 'bg-indigo-50/50 border-indigo-200 shadow-sm' : 'bg-white border-slate-100 hover:border-slate-200 hover:bg-slate-50'}
+                        `}
+                     >
+                        <div className={`
+                          w-6 h-6 rounded-lg flex items-center justify-center transition-all duration-300 border-2
+                          ${isSelected ? 'bg-indigo-600 border-indigo-600' : 'bg-white border-slate-200 group-hover:border-slate-300'}
+                        `}>
+                           {isSelected && <CheckCircle2 size={16} className="text-white" />}
+                        </div>
+                        <span className={`text-sm font-bold transition-colors ${isSelected ? 'text-indigo-900' : 'text-slate-600'}`}>{course.title}</span>
+                     </div>
+                   );
+                 })}
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">CHAPTER OVERVIEW</label>
+              <textarea required 
+                className="w-full min-h-[140px] p-6 bg-slate-50 border-none rounded-[28px] text-slate-900 font-medium leading-relaxed focus:ring-4 focus:ring-indigo-500/10 transition-all placeholder:text-slate-300 resize-none"
+                placeholder="Provide a brief overview of what students will learn in this module..."
+                value={formData.description}
+                onChange={(e) => setFormData({...formData, description: e.target.value})}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-3">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">VISUAL ICON (FALLBACK)</label>
+                <DropdownSelect 
+                  options={[
+                    { value: "globe", label: "Globe (Web)" },
+                    { value: "palette", label: "Palette (CSS)" },
+                    { value: "zap", label: "Zap (JS)" },
+                    { value: "server", label: "Server (Backend)" },
+                    { value: "database", label: "Database" },
+                    { value: "code", label: "Code" },
+                    { value: "layers", label: "Layers" },
+                    { value: "shield", label: "Shield (Auth)" }
+                  ]}
+                  value={formData.icon}
+                  onChange={(value) => setFormData({...formData, icon: value})}
+                />
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider ml-1">Used if no custom icon image is provided.</p>
+              </div>
+              <div className="space-y-3">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">THEME ACCENT COLOR</label>
+                <div className="flex gap-4">
+                  <div className="relative w-16 h-16 shrink-0 group">
+                    <input 
+                      type="color" 
+                      value={formData.color} 
+                      onChange={(e) => setFormData({...formData, color: e.target.value})}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" 
+                    />
+                    <div 
+                      className="w-full h-full rounded-2xl border-2 border-white shadow-lg transition-transform group-hover:scale-110" 
+                      style={{ backgroundColor: formData.color }}
+                    />
+                  </div>
+                  <input 
+                    type="text" 
+                    className="flex-1 h-16 px-6 bg-slate-50 border-none rounded-2xl text-slate-900 font-mono font-bold focus:ring-4 focus:ring-indigo-500/10 transition-all" 
+                    value={formData.color} 
+                    onChange={(e) => setFormData({...formData, color: e.target.value})} 
+                  />
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div style={{ marginTop: '40px', paddingTop: '32px', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'flex-end', gap: '16px' }}>
-          <Link href="/admin/modules" className="btn btn-ghost" style={{ padding: '14px 24px' }}>Cancel</Link>
-          <button type="submit" className="btn btn-primary" style={{ padding: '14px 32px' }} disabled={status === "saving"}>
-            {status === "saving" ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
-            <span>{status === "saving" ? "Updating..." : "Update Module"}</span>
+        <div className="pt-10 border-t border-slate-100 flex flex-col md:flex-row justify-end gap-4 mt-10">
+          <Link href="/admin/modules" className="h-16 px-10 flex items-center justify-center text-slate-500 font-bold hover:bg-slate-50 rounded-2xl transition-all">
+            Discard Changes
+          </Link>
+          <button 
+            type="submit" 
+            className="h-16 px-12 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl shadow-xl shadow-indigo-600/20 transition-all flex items-center justify-center gap-3 disabled:opacity-50 group" 
+            disabled={status === "saving"}
+          >
+            {status === "saving" ? (
+              <><Loader2 className="animate-spin" size={22} /> Updating...</>
+            ) : (
+              <><Save size={22} /> <span>Save Chapter Flow</span> <ChevronRight className="group-hover:translate-x-1 transition-transform" size={22} /></>
+            )}
           </button>
         </div>
         
         {status === "error" && (
-          <div style={{ marginTop: '24px', padding: '16px', background: 'var(--rose-light)', color: 'var(--rose)', borderRadius: '12px', fontSize: '14px', border: '1px solid rgba(220, 38, 38, 0.2)', display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <AlertCircle size={20} />
-            <span><strong>Error:</strong> Failed to save changes. Please check your connection and try again.</span>
+          <div className="mt-8 p-5 bg-rose-50 border border-rose-100 rounded-2xl text-rose-600 text-sm font-bold flex items-center gap-4 animate-in shake duration-500">
+            <AlertCircle size={22} className="shrink-0" />
+            <span>Failed to save changes. Please verify your data and try again.</span>
           </div>
         )}
       </form>

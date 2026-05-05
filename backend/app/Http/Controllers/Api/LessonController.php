@@ -31,7 +31,7 @@ class LessonController extends Controller
      */
     public function adminIndex(Request $request): JsonResponse
     {
-        $query = Lesson::with(['module.courses', 'teacher'])->orderBy('order');
+        $query = Lesson::with(['module.courses', 'teacher'])->withCount('slides')->orderBy('order');
 
         if ($request->user()->role === 'teacher') {
             $user = $request->user();
@@ -182,5 +182,92 @@ class LessonController extends Controller
             'message' => 'Lesson duplicated successfully',
             'data'    => $newLesson,
         ]);
+    }
+
+    public function import(Request $request, Lesson $lesson): JsonResponse
+    {
+        $request->validate([
+            'json_data' => 'required|json',
+        ]);
+
+        $data = json_decode($request->json_data, true);
+
+        \Illuminate\Support\Facades\DB::beginTransaction();
+        try {
+            // 1. Update Lesson
+            $lesson->update([
+                'title'       => $data['title'] ?? $lesson->title,
+                'description' => $data['description'] ?? $lesson->description,
+                'difficulty'  => $data['difficulty'] ?? $lesson->difficulty,
+                'duration'    => $data['duration'] ?? $lesson->duration,
+                'is_active'   => $data['is_active'] ?? $lesson->is_active,
+            ]);
+
+            // 2. Sync Slides (if provided)
+            if (isset($data['slides']) && is_array($data['slides'])) {
+                $keepIds = [];
+                foreach ($data['slides'] as $index => $sData) {
+                    if (isset($sData['id'])) {
+                        $slide = \App\Models\Slide::find($sData['id']);
+                        if ($slide && $slide->lesson_id == $lesson->id) {
+                            $slide->update([
+                                'title'          => $sData['title'] ?? $slide->title,
+                                'type'           => $sData['type'] ?? $slide->type,
+                                'content'        => $sData['content'] ?? $slide->content,
+                                'code_snippet'   => $sData['code_snippet'] ?? $slide->code_snippet,
+                                'code_theme'     => $sData['code_theme'] ?? $slide->code_theme,
+                                'code_position'  => $sData['code_position'] ?? $slide->code_position,
+                                'image'          => $sData['image'] ?? $slide->image,
+                                'secondary_image'=> $sData['secondary_image'] ?? $slide->secondary_image,
+                                'image_position' => $sData['image_position'] ?? $slide->image_position,
+                                'image_width'    => $sData['image_width'] ?? $slide->image_width,
+                                'secondary_image_position' => $sData['secondary_image_position'] ?? $slide->secondary_image_position,
+                                'secondary_image_width'    => $sData['secondary_image_width'] ?? $sData['secondary_image_width'],
+                                'layout_type'    => $sData['layout_type'] ?? $slide->layout_type,
+                                'language'       => $sData['language'] ?? $slide->language,
+                                'order'          => $sData['order'] ?? $index,
+                                'notes'          => $sData['notes'] ?? $slide->notes,
+                            ]);
+                            $keepIds[] = $slide->id;
+                        }
+                    } else {
+                        $newSlide = $lesson->slides()->create([
+                            'title'          => $sData['title'],
+                            'type'           => $sData['type'] ?? 'concept',
+                            'content'        => $sData['content'] ?? '',
+                            'code_snippet'   => $sData['code_snippet'] ?? '',
+                            'code_theme'     => $sData['code_theme'] ?? 'terminal',
+                            'code_position'  => $sData['code_position'] ?? 'right',
+                            'image'          => $sData['image'] ?? null,
+                            'secondary_image'=> $sData['secondary_image'] ?? null,
+                            'image_position' => $sData['image_position'] ?? 'top',
+                            'image_width'    => $sData['image_width'] ?? '100',
+                            'secondary_image_position' => $sData['secondary_image_position'] ?? 'right',
+                            'secondary_image_width'    => $sData['secondary_image_width'] ?? '50',
+                            'layout_type'    => $sData['layout_type'] ?? 'standard',
+                            'language'       => $sData['language'] ?? 'php',
+                            'order'          => $sData['order'] ?? $index,
+                            'notes'          => $sData['notes'] ?? null,
+                        ]);
+                        $keepIds[] = $newSlide->id;
+                    }
+                }
+            }
+
+            \Illuminate\Support\Facades\DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Lesson updated from JSON successfully',
+                'data'    => $lesson->load('slides')
+            ]);
+
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Import failed: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }
